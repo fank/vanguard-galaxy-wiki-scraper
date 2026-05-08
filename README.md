@@ -17,6 +17,16 @@ Uses the public MediaWiki API (`api.php`) — no scraping, no Cloudflare workaro
 
 ## Install
 
+### Docker (recommended for CLI use)
+
+```bash
+docker pull ghcr.io/fank/vanguard-galaxy-wiki-scraper:latest
+```
+
+Multi-arch (amd64 + arm64). No Python toolchain required on the host.
+
+### From source
+
 ```bash
 git clone https://github.com/fank/vanguard-galaxy-wiki-scraper.git
 cd vanguard-galaxy-wiki-scraper
@@ -25,6 +35,27 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+
+### Docker
+
+```bash
+# incremental run — outputs land in ./out on the host
+docker run --rm -v "$PWD/out:/work/out" ghcr.io/fank/vanguard-galaxy-wiki-scraper
+
+# full re-emit + tighter API spacing
+docker run --rm -v "$PWD/out:/work/out" ghcr.io/fank/vanguard-galaxy-wiki-scraper --full --sleep 0.05
+```
+
+Mount `/work/out` to the host directory you want the CSV/JSON/manifest written to. The container runs as UID 1000, so on a typical single-user Linux host the files end up owned by your user with no extra config.
+
+Suggested shell alias:
+
+```bash
+alias vg-wiki-scrape='docker run --rm -v "$PWD/out:/work/out" ghcr.io/fank/vanguard-galaxy-wiki-scraper:latest'
+vg-wiki-scrape --full
+```
+
+### From source
 
 ```bash
 python scrape.py                 # incremental — skips pages whose revid hasn't changed

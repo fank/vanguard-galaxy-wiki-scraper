@@ -1,0 +1,8 @@
+.git/
+.github/
+.venv/
+out/
+__pycache__/
+*.pyc
+README.md
+.gitignore
