@@ -1,2 +1,2 @@
-requests>=2.31
+requests>=2.33.1
 mwparserfromhell>=0.7.2
