@@ -128,3 +128,81 @@ def test_slot_roster_groups_by_label_and_skips_placeholders(tiny_aspectdata_lua)
     assert "All Modules (1): Microgenerators" in body
     # Placeholder entry (no image) must not show up.
     assert "GenericElementResist" not in body
+
+
+from aspectdata import per_slot_chunks, per_rarity_chunks, per_effect_chunks
+
+
+def test_per_slot_chunks_one_per_slot(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_slot_chunks(records))
+    # Slot labels (with spaces for compound enums) drive chunk names.
+    assert "Aspects in Weapons slot" in chunks
+    assert "Aspects in Dronebay slot" in chunks
+    assert "Aspects in All Items slot" in chunks
+    assert "Aspects in All Modules slot" in chunks
+
+
+def test_per_slot_chunk_lists_aspects_with_descriptions(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_slot_chunks(records))
+    body = chunks["Aspects in Weapons slot"]
+    assert "Critical Attenuation (common)" in body
+    assert "Increases critical strike damage of this weapon by 25%" in body
+
+
+def test_per_slot_chunk_skips_placeholder_entries(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    # GenericElementResist has slot=nil and image=nil — must not pollute any
+    # per-slot chunk.
+    for _, body in per_slot_chunks(records):
+        assert "GenericElementResist" not in body
+
+
+def test_per_rarity_chunks_split_common_and_rare(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_rarity_chunks(records))
+    assert "Common aspects" in chunks
+    assert "Rare aspects" in chunks
+    common_body = chunks["Common aspects"]
+    rare_body = chunks["Rare aspects"]
+    # Critical Attenuation is common; Oversized Drone Bay is rare.
+    assert "Critical Attenuation" in common_body
+    assert "Critical Attenuation" not in rare_body
+    assert "Oversized Drone Bay" in rare_body
+    assert "Oversized Drone Bay" not in common_body
+
+
+def test_per_rarity_chunks_include_synonym_phrasing(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_rarity_chunks(records))
+    # 'epic' / 'purple' / 'green' are common player vocabulary; chunks
+    # mention them so embedding-similarity queries land.
+    assert "purple" in chunks["Rare aspects"].lower()
+    assert "epic" in chunks["Rare aspects"].lower()
+    assert "green" in chunks["Common aspects"].lower()
+
+
+def test_per_effect_chunks_categorize_via_boost_stats(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_effect_chunks(records))
+    # Gamma Ward has Resist boostStats — must land in the resistance chunk.
+    assert "Aspects boosting damage resistance" in chunks
+    assert "Gamma Ward" in chunks["Aspects boosting damage resistance"]
+
+
+def test_per_effect_chunks_categorize_via_description(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_effect_chunks(records))
+    # Critical Attenuation has empty boost_stats but description mentions
+    # "critical" — must still land in the critical-hits chunk.
+    assert "Aspects boosting critical hits" in chunks
+    assert "Critical Attenuation" in chunks["Aspects boosting critical hits"]
+
+
+def test_per_effect_chunk_lists_drones_aspects(tiny_aspectdata_lua):
+    records = _records(tiny_aspectdata_lua)
+    chunks = dict(per_effect_chunks(records))
+    assert "Aspects boosting drones" in chunks
+    body = chunks["Aspects boosting drones"]
+    assert "Oversized Drone Bay" in body

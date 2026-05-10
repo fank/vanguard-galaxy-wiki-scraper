@@ -180,8 +180,9 @@ def aspect_sentences(record: AspectRecord) -> str:
 def slot_roster_chunk(
     records: dict[str, AspectRecord],
 ) -> tuple[str, str] | None:
-    """All aspects grouped by slot — one chunk so 'all weapon aspects' lands
-    a single dense answer."""
+    """Quick alphabetical index — every aspect grouped by slot, names only.
+    Useful for breadth queries ('how many aspects exist?'). Per-slot detail
+    chunks (`per_slot_chunks`) carry the same grouping with descriptions."""
     by_slot: dict[str, list[str]] = {}
     for r in records.values():
         if not r.has_image:
@@ -196,3 +197,145 @@ def slot_roster_chunk(
         names = sorted(by_slot[slot])
         lines.append(f"{slot} ({len(names)}): {', '.join(names)}")
     return ("Aspect roster", "\n".join(lines))
+
+
+def _aspect_line(r: AspectRecord, *, include_slot: bool, include_rarity: bool) -> str:
+    """One line summarizing an aspect for an aggregate chunk."""
+    badges: list[str] = []
+    if include_slot:
+        badges.append(_slot_label(r.slot))
+    if include_rarity:
+        badges.append("common" if r.common else "rare")
+    if r.size_note:
+        badges.append(r.size_note)
+    badge_text = f" ({', '.join(badges)})" if badges else ""
+    desc = r.description or "no description"
+    return f"{r.display_name}{badge_text}: {desc}"
+
+
+def per_slot_chunks(
+    records: dict[str, AspectRecord],
+) -> list[tuple[str, str]]:
+    """One chunk per slot label, each listing every aspect with its full
+    description. Answers 'what aspects fit X slot?' on a single chunk."""
+    by_slot: dict[str, list[AspectRecord]] = {}
+    for r in records.values():
+        if not r.has_image:
+            continue
+        label = _slot_label(r.slot)
+        by_slot.setdefault(label, []).append(r)
+    out: list[tuple[str, str]] = []
+    for slot in sorted(by_slot):
+        aspects = sorted(by_slot[slot], key=lambda r: r.display_name)
+        lines = [
+            f"Aspects available for the {slot} slot ({len(aspects)} total):",
+            "",
+        ]
+        for r in aspects:
+            lines.append(_aspect_line(r, include_slot=False, include_rarity=True))
+        out.append((f"Aspects in {slot} slot", "\n".join(lines)))
+    return out
+
+
+def per_rarity_chunks(
+    records: dict[str, AspectRecord],
+) -> list[tuple[str, str]]:
+    """One chunk for common aspects, one for rare. Answers 'which rare
+    aspects exist?' / 'list common aspects'. Includes synonyms in the body
+    so embeddings match queries phrased as 'epic' / 'purple' / 'green'."""
+    common: list[AspectRecord] = []
+    rare: list[AspectRecord] = []
+    for r in records.values():
+        if not r.has_image:
+            continue
+        (common if r.common else rare).append(r)
+
+    out: list[tuple[str, str]] = []
+    for label, aspects, synonyms in (
+        ("Common", common,
+         "Common aspects (also called green-tier or standard-rarity aspects) "
+         "are the more frequently rolled tier."),
+        ("Rare", rare,
+         "Rare aspects (also called purple-tier, epic, or exotic aspects) "
+         "are the less common, generally stronger tier."),
+    ):
+        if not aspects:
+            continue
+        aspects = sorted(aspects, key=lambda r: r.display_name)
+        lines = [
+            f"{label} aspects ({len(aspects)} total):",
+            "",
+            synonyms,
+            "",
+        ]
+        for r in aspects:
+            lines.append(_aspect_line(r, include_slot=True, include_rarity=False))
+        out.append((f"{label} aspects", "\n".join(lines)))
+    return out
+
+
+# Effect-category detection. Each entry: (chunk title, predicate). Predicates
+# inspect both `boost_stats` (structured) and `description` (free-form) so
+# aspects with empty boost lists still get categorized via their prose.
+def _has_stat(r: AspectRecord, *needles: str) -> bool:
+    return any(any(n in b["stat"] for n in needles) for b in r.boost_stats)
+
+
+def _desc_has(r: AspectRecord, *phrases: str) -> bool:
+    desc = (r.description or "").lower()
+    return any(p in desc for p in phrases)
+
+
+_EFFECT_CATEGORIES: tuple[tuple[str, Any], ...] = (
+    ("damage resistance",
+     lambda r: _has_stat(r, "Resist", "DamageReduction")
+               or _desc_has(r, "resistance", "reduces damage")),
+    ("critical hits",
+     lambda r: _has_stat(r, "Critical")
+               or _desc_has(r, "critical")),
+    ("drones",
+     lambda r: r.slot == "Dronebay"
+               or _desc_has(r, "drone")),
+    ("weapon range",
+     lambda r: _has_stat(r, "WeaponRange")
+               or _desc_has(r, "weapon range")),
+    ("reload and firing speed",
+     lambda r: _has_stat(r, "AttackSpeed", "ReloadSpeed", "MagazineSize")
+               or _desc_has(r, "reload", "fire rate", "attack speed", "magazine")),
+    ("reactor and energy",
+     lambda r: _has_stat(r, "EnergyCapacity")
+               or _desc_has(r, "reactor", "energy capacity")),
+    ("repair and regeneration",
+     lambda r: _desc_has(r, "regenerat", "auto-repair", "repair")),
+    ("extra damage type",
+     lambda r: any(b["stat"].endswith("Damage") and b["stat"] != "Damage"
+                   for b in r.boost_stats)
+               or _desc_has(r, "additional", "deals an additional",
+                            "extra damage")),
+)
+
+
+def per_effect_chunks(
+    records: dict[str, AspectRecord],
+) -> list[tuple[str, str]]:
+    """One chunk per effect category, each listing matching aspects with
+    descriptions. Answers 'which aspects boost crit/drones/range/...?' on a
+    single chunk. An aspect can appear in multiple categories — that's
+    intentional, since players ask the same question several ways."""
+    out: list[tuple[str, str]] = []
+    for category, predicate in _EFFECT_CATEGORIES:
+        matches = [
+            r for r in records.values()
+            if r.has_image and predicate(r)
+        ]
+        if not matches:
+            continue
+        matches.sort(key=lambda r: r.display_name)
+        lines = [
+            f"Aspects that boost {category} ({len(matches)} total):",
+            "",
+        ]
+        for r in matches:
+            lines.append(_aspect_line(r, include_slot=True, include_rarity=True))
+        out.append((f"Aspects boosting {category}", "\n".join(lines)))
+    return out

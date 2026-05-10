@@ -219,6 +219,12 @@ def _is_aspectdata_derived(row_name: str) -> bool:
         or " – Aspect (" in row_name
         or row_name == "Aspect roster"
         or row_name.startswith("Aspect roster (")
+        or row_name.startswith("Aspects in ")
+        or row_name == "Common aspects"
+        or row_name.startswith("Common aspects (")
+        or row_name == "Rare aspects"
+        or row_name.startswith("Rare aspects (")
+        or row_name.startswith("Aspects boosting ")
     )
 
 
@@ -332,6 +338,16 @@ def main_with_args(argv: list[str] | None = None) -> int:
         chunks = chunk(ar_body, TEXT_CAP)
         for j, c in enumerate(chunks):
             n = ar_name if len(chunks) == 1 else f"{ar_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    for aggregate_name, aggregate_body in (
+        list(aspectdata_mod.per_slot_chunks(aspectdata_ctx.records))
+        + list(aspectdata_mod.per_rarity_chunks(aspectdata_ctx.records))
+        + list(aspectdata_mod.per_effect_chunks(aspectdata_ctx.records))
+    ):
+        chunks = chunk(aggregate_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = aggregate_name if len(chunks) == 1 else f"{aggregate_name} ({j + 1}/{len(chunks)})"
             new_rows.append((n[:NAME_CAP], c))
 
     if args.dry_run:
