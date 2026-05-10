@@ -28,6 +28,7 @@ from pathlib import Path
 
 import mwparserfromhell
 import requests
+import shipdata as shipdata_mod
 
 API_URL = "https://vanguard-galaxy.fandom.com/api.php"
 USER_AGENT = (
@@ -197,14 +198,14 @@ def chunk(text: str, cap: int) -> list[str]:
     return out
 
 
-def main() -> int:
+def main_with_args(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--out", default="out", help="output dir (default: ./out)")
     ap.add_argument("--full", action="store_true",
                     help="ignore manifest, re-emit every page")
     ap.add_argument("--sleep", type=float, default=0.1,
                     help="seconds between API calls (default: 0.1)")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -218,6 +219,8 @@ def main() -> int:
 
     session = requests.Session()
     session.headers["User-Agent"] = USER_AGENT
+
+    shipdata_ctx = shipdata_mod.load(session)
 
     titles = list(list_articles(session))
     print(f"Found {len(titles)} articles", file=sys.stderr)
@@ -243,7 +246,7 @@ def main() -> int:
             continue
         changed += 1
         for sec_name, sec_body in split_sections(wikitext, title):
-            text = to_text(sec_body)
+            text = to_text(sec_body, shipdata=shipdata_ctx)
             if not text:
                 continue
             chunks = chunk(text, TEXT_CAP)
@@ -252,12 +255,31 @@ def main() -> int:
                 new_rows.append((name[:NAME_CAP], c))
         print(f"[{i:>3}/{len(titles)}] {title} (rev {revid})", file=sys.stderr)
 
+    manifest["__module_shipdata"] = shipdata_ctx.revid
+    shipdata_changed = prev.get("__module_shipdata") != shipdata_ctx.revid
+
+    for key, record in sorted(shipdata_ctx.records.items()):
+        body = shipdata_mod.spec_sentences(record, shipdata_ctx.records)
+        if not body:
+            continue
+        name = f"{key} – Spec"
+        chunks = chunk(body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
     # Incremental merge: keep prior rows for unchanged pages, replace rows for changed pages.
     if prev and not args.full and csv_path.exists():
         kept: list[tuple[str, str]] = []
-        changed_titles = {t for t, r in manifest.items() if prev.get(t) != r}
+        changed_titles = {t for t, r in manifest.items()
+                          if not t.startswith("__") and prev.get(t) != r}
         with csv_path.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
+                if row["name"].endswith(" – Spec") or " – Spec (" in row["name"]:
+                    if shipdata_changed:
+                        continue
+                    kept.append((row["name"], row["text"]))
+                    continue
                 page = row["name"].split(" – ", 1)[0]
                 if page in changed_titles or page not in manifest:
                     continue
@@ -292,6 +314,10 @@ def main() -> int:
         file=sys.stderr,
     )
     return 0
+
+
+def main() -> int:
+    return main_with_args(None)
 
 
 if __name__ == "__main__":

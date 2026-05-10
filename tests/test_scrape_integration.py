@@ -1,4 +1,8 @@
+import json
+from pathlib import Path
+
 import shipdata
+import scrape
 from scrape import to_text
 
 
@@ -30,3 +34,59 @@ def test_to_text_without_shipdata_drops_invokes(cudal_page_wikitext):
     # No ShipData passed — invokes drop silently, leaving the prose with
     # gaps, but never emit literal #invoke markers.
     assert "#invoke" not in out
+
+
+class _SessAllPages:
+    """Minimal session stub: returns a fixed allpages list, the Cudal page
+    wikitext, and a tiny Module:ShipData."""
+
+    def __init__(self, cudal_text: str, lua_text: str):
+        self.cudal_text = cudal_text
+        self.lua_text = lua_text
+        self.headers: dict[str, str] = {}
+
+    def get(self, url, params=None, timeout=None):
+        params = params or {}
+        action = params.get("action")
+        if action == "query" and params.get("list") == "allpages":
+            return _Resp({
+                "query": {"allpages": [{"title": "Cudal", "pageid": 1}]}
+            })
+        if action == "parse":
+            page = params.get("page")
+            if page == "Module:ShipData":
+                return _Resp({"parse": {"wikitext": self.lua_text, "revid": 99}})
+            return _Resp({"parse": {"wikitext": self.cudal_text, "revid": 7}})
+        raise AssertionError(f"unexpected request: {params}")
+
+
+def test_main_emits_spec_card_per_ship(
+    cudal_page_wikitext, tiny_shipdata_lua, tmp_path, monkeypatch
+):
+    sess = _SessAllPages(cudal_page_wikitext, tiny_shipdata_lua)
+    monkeypatch.setattr(scrape.requests, "Session", lambda: sess)
+    monkeypatch.setattr(scrape, "list_articles",
+                        lambda s: iter([("Cudal", 1)]))
+
+    rc = scrape.main_with_args(["--out", str(tmp_path), "--full", "--sleep", "0"])
+    assert rc == 0
+    payload = json.loads((tmp_path / "vg_wiki.json").read_text())
+    assert "Cudal – Spec" in payload
+    assert "Cudal-Marade – Spec" in payload
+    assert "Eclipse – Spec" in payload
+    # Article chunk has resolved values.
+    overview = payload["Cudal – Overview"]["text"]
+    assert "Frontier cutter" in overview
+
+
+def test_main_records_shipdata_revid_in_manifest(
+    cudal_page_wikitext, tiny_shipdata_lua, tmp_path, monkeypatch
+):
+    sess = _SessAllPages(cudal_page_wikitext, tiny_shipdata_lua)
+    monkeypatch.setattr(scrape.requests, "Session", lambda: sess)
+    monkeypatch.setattr(scrape, "list_articles",
+                        lambda s: iter([("Cudal", 1)]))
+
+    scrape.main_with_args(["--out", str(tmp_path), "--full", "--sleep", "0"])
+    manifest = json.loads((tmp_path / "vg_wiki.manifest.json").read_text())
+    assert manifest["__module_shipdata"] == 99

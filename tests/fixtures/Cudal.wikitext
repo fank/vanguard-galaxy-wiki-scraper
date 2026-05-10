@@ -2,6 +2,9 @@
 
 The '''Cudal''' is a [[{{#invoke:Shipbox|field|Cudal|manufacturer}}]] cutter sold at [[Frontier]] shipyards. [[Marade Wharf]] resells the same hull as the Cudal-Marade.
 
+== Background ==
+The Cudal is a reliable mid-range vessel favoured by independent traders operating along Frontier routes.
+
 [[Category:Ships]]
 [[Category:Cutters]]
 [[Category:{{#invoke:Shipbox|field|Cudal|manufacturer}}]]
