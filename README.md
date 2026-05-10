@@ -14,6 +14,16 @@ Uses the public MediaWiki API (`api.php`) — no scraping, no Cloudflare workaro
 6. Flattens to plaintext via `mwparserfromhell.strip_code`, normalises whitespace.
 7. Splits sections longer than 4000 chars (vrt-cogs' per-entry cap) at paragraph boundaries.
 8. Writes a `revid` manifest so subsequent runs only re-emit pages that actually changed.
+9. Fetches `Module:ShipData` once per run, parses it, and emits one
+   `<Name> – Spec` chunk per ship as natural-language sentences (manufacturer,
+   class, hull/shield/armor modifiers, hardpoints, warp speed, crew, cargo,
+   shipyard requirements, conquest rank where applicable). The Module's revid
+   is tracked under `__module_shipdata` in the manifest so a Module edit
+   re-emits every Spec card.
+10. Resolves `{{#invoke:Shipbox|field|...}}` and `{{#invoke:Shipbox|infobox|...}}`
+    parser-function calls in article wikitext using a small registry
+    (`resolvers.py`). Future modules (e.g. `Module:ItemData`) plug in by
+    registering a handler — no scraper changes.
 
 ## Install
 
@@ -62,6 +72,7 @@ python scrape.py                 # incremental — skips pages whose revid hasn'
 python scrape.py --full          # ignore manifest, re-emit everything
 python scrape.py --sleep 0.05    # tighter API spacing (default 0.1s)
 python scrape.py --out path      # custom output directory (default ./out)
+python scrape.py --dry-run        # print row count + a sample Spec card and exit
 ```
 
 First run takes ~30s for the full wiki. Subsequent runs touch only changed pages.
@@ -114,6 +125,16 @@ For local embedding models (e.g. `embeddinggemma`, `nomic-embed-text`) cosine sc
 ```
 
 The bot's system prompt also needs to explicitly instruct grounding on the injected context — character-roleplay prompts otherwise dominate and the LLM will say "I don't have the lore loaded" even when context is present.
+
+## Development
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
+
+Tests run offline against captured fixtures in `tests/fixtures/`. No network
+calls during test runs.
 
 ## Targeting a different wiki
 
