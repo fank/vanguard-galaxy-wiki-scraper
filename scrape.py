@@ -133,8 +133,37 @@ def strip_file_links(code: mwparserfromhell.wikicode.Wikicode) -> None:
                 continue
 
 
-def to_text(wikitext: str) -> str:
+def resolve_invokes(code: mwparserfromhell.wikicode.Wikicode, shipdata) -> None:
+    """Substitute every {{#invoke:Module|fn|args}} call with its handler's
+    return value. Calls without a registered handler are removed."""
+    import resolvers
+
+    for tpl in list(code.filter_templates(recursive=True)):
+        name = str(tpl.name).strip()
+        if not name.startswith("#invoke:"):
+            continue
+        # mwparserfromhell stores `#invoke:Module|fn|args...` as:
+        #   tpl.name  = "#invoke:Module"
+        #   tpl.params[0] = "fn"
+        #   tpl.params[1:] = positional/named args
+        module = name.split(":", 1)[1].strip()
+        if not tpl.params:
+            replacement = ""
+        else:
+            fn = str(tpl.params[0].value).strip()
+            args = [str(p.value).strip() for p in tpl.params[1:]]
+            out = resolvers.resolve(module, fn, args, ctx=shipdata)
+            replacement = out if out is not None else ""
+        try:
+            code.replace(tpl, mwparserfromhell.parse(replacement))
+        except ValueError:
+            # Parent already replaced this invoke (nested case).
+            continue
+
+
+def to_text(wikitext: str, shipdata=None) -> str:
     code = mwparserfromhell.parse(wikitext)
+    resolve_invokes(code, shipdata)
     strip_file_links(code)
     render_templates_inline(code)
     text = code.strip_code(normalize=True, collapse=True)
