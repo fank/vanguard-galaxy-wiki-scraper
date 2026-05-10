@@ -1,0 +1,7 @@
+{{#invoke:Shipbox|infobox|Cudal}}
+
+The '''Cudal''' is a [[{{#invoke:Shipbox|field|Cudal|manufacturer}}]] cutter sold at [[Frontier]] shipyards. [[Marade Wharf]] resells the same hull as the Cudal-Marade.
+
+[[Category:Ships]]
+[[Category:Cutters]]
+[[Category:{{#invoke:Shipbox|field|Cudal|manufacturer}}]]
