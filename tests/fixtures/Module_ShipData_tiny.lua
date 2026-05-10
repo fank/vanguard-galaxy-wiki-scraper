@@ -14,7 +14,7 @@ return {
         playerLevel = 1,
         shipyardLevel = "1+",
         shipyardRep = "Neutral",
-        shipyardFaction = "Frontier",
+        shipyardFactions = {"Frontier"},
     },
     ["Cudal-Marade"] = {
         displayName = "Cudal",
@@ -31,7 +31,7 @@ return {
         playerLevel = 5,
         shipyardLevel = "5+",
         shipyardRep = "Distinguished",
-        shipyardFaction = "Marauders",
+        shipyardFactions = {"Marauders", "Corsair Syndicate"},
         conquestRank = "Cutthroat",
         notes = "Original manufacturer is [[Frontier]].",
     },

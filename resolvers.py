@@ -51,7 +51,7 @@ _FIELD_LOOKUP = {
     "playerLevel": "player_level",
     "shipyardLevel": "shipyard_level",
     "shipyardRep": "shipyard_rep",
-    "shipyardFaction": "shipyard_faction",
+    "shipyardFactions": "shipyard_factions",
     "conquestRank": "conquest_rank",
 }
 

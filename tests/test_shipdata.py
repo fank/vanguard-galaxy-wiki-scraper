@@ -12,7 +12,7 @@ def test_parse_lua_extracts_string_fields(tiny_shipdata_lua):
     cudal = parse_lua(tiny_shipdata_lua)["Cudal"]
     assert cudal["manufacturer"] == "Frontier"
     assert cudal["class"] == "Cutters"
-    assert cudal["shipyardFaction"] == "Frontier"
+    assert cudal["shipyardRep"] == "Neutral"
 
 
 def test_parse_lua_coerces_numeric_fields(tiny_shipdata_lua):
@@ -91,9 +91,23 @@ def test_shiprecord_exposes_named_fields(tiny_shipdata_lua):
 def test_shiprecord_handles_missing_optional_fields(tiny_shipdata_lua):
     data = load(FakeSession(tiny_shipdata_lua))
     eclipse = data.records["Eclipse"]
-    assert eclipse.shipyard_faction is None
+    assert eclipse.shipyard_factions is None
     assert eclipse.shipyard_level is None
     assert eclipse.not_for_sale is True
+
+
+def test_shiprecord_parses_shipyard_factions_list(tiny_shipdata_lua):
+    data = load(FakeSession(tiny_shipdata_lua))
+    cudal = data.records["Cudal"]
+    assert cudal.shipyard_factions == ["Frontier"]
+    marade = data.records["Cudal-Marade"]
+    assert marade.shipyard_factions == ["Marauders", "Corsair Syndicate"]
+
+
+def test_shiprecord_falls_back_to_legacy_singular_field():
+    legacy = {"shipyardFaction": "Frontier"}
+    record = ShipRecord.from_dict("Legacy", legacy)
+    assert record.shipyard_factions == ["Frontier"]
 
 
 def test_load_calls_api_once(tiny_shipdata_lua):
@@ -139,6 +153,13 @@ def test_spec_conquest_sentence(tiny_shipdata_lua):
     records = _records(tiny_shipdata_lua)
     text = spec_sentences(records["Cudal-Marade"], records)
     assert "Cutthroat conquest rank" in text
+
+
+def test_spec_shipyard_sentence_joins_multiple_factions(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal-Marade"], records)
+    # Cudal-Marade now lists two factions; sentence should join naturally.
+    assert "It sells at Marauders and Corsair Syndicate shipyards" in text
 
 
 def test_spec_not_for_sale_sentence(tiny_shipdata_lua):

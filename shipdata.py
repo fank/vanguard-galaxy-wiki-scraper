@@ -93,12 +93,19 @@ class ShipRecord:
     player_level: int | None = None
     shipyard_level: str | None = None
     shipyard_rep: str | None = None
-    shipyard_faction: str | None = None
+    shipyard_factions: list[str] | None = None
     conquest_rank: str | None = None
     not_for_sale: bool = False
 
     @classmethod
     def from_dict(cls, key: str, d: dict[str, Any]) -> "ShipRecord":
+        # Module:ShipData migrated from `shipyardFaction` (single string) to
+        # `shipyardFactions` (Lua list) so that hulls sold at multiple
+        # vendors can list every shipyard. Tolerate the legacy spelling for
+        # any caller that still hands us pre-migration data.
+        factions = d.get("shipyardFactions")
+        if factions is None and d.get("shipyardFaction") is not None:
+            factions = [d["shipyardFaction"]]
         return cls(
             key=key,
             display_name=d.get("displayName", key),
@@ -117,7 +124,7 @@ class ShipRecord:
                 str(d["shipyardLevel"]) if "shipyardLevel" in d else None
             ),
             shipyard_rep=d.get("shipyardRep"),
-            shipyard_faction=d.get("shipyardFaction"),
+            shipyard_factions=factions,
             conquest_rank=d.get("conquestRank"),
             not_for_sale=bool(d.get("notForSale", False)),
         )
@@ -245,15 +252,24 @@ def _combat_sentence(r: ShipRecord) -> str:
     return " ".join(parts)
 
 
+def _format_faction_list(factions: list[str]) -> str:
+    if len(factions) == 1:
+        return factions[0]
+    if len(factions) == 2:
+        return f"{factions[0]} and {factions[1]}"
+    return ", ".join(factions[:-1]) + f", and {factions[-1]}"
+
+
 def _acquisition_sentence(r: ShipRecord) -> str:
     if r.not_for_sale:
         return (
             f"The {r.key} is awarded as a story reward and is "
             "not sold at any shipyard."
         )
-    if r.shipyard_faction is None:
+    factions = r.shipyard_factions or []
+    if not factions:
         return ""
-    bits = [f"It sells at {r.shipyard_faction} shipyards"]
+    bits = [f"It sells at {_format_faction_list(factions)} shipyards"]
     if r.shipyard_level is not None:
         bits.append(f"from shipyard level {r.shipyard_level}")
     if r.shipyard_rep is not None:
