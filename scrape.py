@@ -198,6 +198,18 @@ def chunk(text: str, cap: int) -> list[str]:
     return out
 
 
+def _is_shipdata_derived(row_name: str) -> bool:
+    """True for any chunk built from Module:ShipData. Re-emitted whenever the
+    Module's revid changes; preserved otherwise."""
+    return (
+        row_name.endswith(" – Spec")
+        or " – Spec (" in row_name
+        or row_name.startswith("Ship rankings – ")
+        or row_name == "Ship roster"
+        or row_name.startswith("Ship roster (")
+    )
+
+
 def main_with_args(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--out", default="out", help="output dir (default: ./out)")
@@ -270,6 +282,20 @@ def main_with_args(argv: list[str] | None = None) -> int:
             n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
             new_rows.append((n[:NAME_CAP], c))
 
+    for ranking_name, ranking_body in shipdata_mod.ranking_chunks(shipdata_ctx.records):
+        chunks = chunk(ranking_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = ranking_name if len(chunks) == 1 else f"{ranking_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    roster = shipdata_mod.class_roster_chunk(shipdata_ctx.records)
+    if roster is not None:
+        roster_name, roster_body = roster
+        chunks = chunk(roster_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = roster_name if len(chunks) == 1 else f"{roster_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
     if args.dry_run:
         sample_key = "Cudal" if "Cudal" in shipdata_ctx.records else \
             next(iter(shipdata_ctx.records))
@@ -289,7 +315,7 @@ def main_with_args(argv: list[str] | None = None) -> int:
                           if not t.startswith("__") and prev.get(t) != r}
         with csv_path.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                if row["name"].endswith(" – Spec") or " – Spec (" in row["name"]:
+                if _is_shipdata_derived(row["name"]):
                     if shipdata_changed:
                         continue
                     kept.append((row["name"], row["text"]))

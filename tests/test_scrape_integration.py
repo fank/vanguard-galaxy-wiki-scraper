@@ -108,3 +108,21 @@ def test_dry_run_prints_sample_card_and_writes_nothing(
     out = capsys.readouterr().out
     assert "Cudal – Spec" in out
     assert "Frontier cutter" in out
+
+
+def test_main_emits_ranking_and_roster_chunks(
+    cudal_page_wikitext, tiny_shipdata_lua, tmp_path, monkeypatch
+):
+    sess = _SessAllPages(cudal_page_wikitext, tiny_shipdata_lua)
+    monkeypatch.setattr(scrape.requests, "Session", lambda: sess)
+    monkeypatch.setattr(scrape, "list_articles",
+                        lambda s: iter([("Cudal", 1)]))
+
+    rc = scrape.main_with_args(["--out", str(tmp_path), "--full", "--sleep", "0"])
+    assert rc == 0
+    payload = json.loads((tmp_path / "vg_wiki.json").read_text())
+    assert "Ship rankings – Cargo capacity" in payload
+    assert "Ship rankings – Warp speed" in payload
+    assert "Ship roster" in payload
+    cargo = payload["Ship rankings – Cargo capacity"]["text"]
+    assert cargo.index("Eclipse") < cargo.index("Cudal")

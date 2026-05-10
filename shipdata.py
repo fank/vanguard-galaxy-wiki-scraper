@@ -302,3 +302,90 @@ def spec_sentences(
     if variant:
         paragraphs.append(variant)
     return "\n\n".join(paragraphs)
+
+
+# Per-stat ranking aggregates. RAG retrieves top-N chunks by similarity, so
+# "biggest cargo ship?" against 120 individual Spec cards rarely surfaces the
+# actual leader. A pre-aggregated ranking chunk per stat fixes that — the
+# query embeds against "ranked by cargo capacity" once and the LLM gets the
+# whole leaderboard in one shot.
+_RANKING_DESCRIPTORS: tuple[tuple[str, str, str], ...] = (
+    ("Cargo capacity", "cargo", "cargo units"),
+    ("Hull modifier", "hull_scale", "× hull"),
+    ("Shield modifier", "shield_scale", "× shield"),
+    ("Armor modifier", "armor_scale", "× armor"),
+    ("Warp speed", "speed", "ls/s"),
+    ("Warp acceleration", "accel", "ls/s²"),
+    ("Crew capacity", "crew", "crew slots"),
+)
+_RANKING_TOP_N = 30
+
+
+def _format_stat_value(v: Any) -> str:
+    if isinstance(v, bool):
+        return str(v)
+    if isinstance(v, int):
+        return f"{v:,}"
+    if isinstance(v, float):
+        return f"{v:g}"
+    return str(v)
+
+
+def ranking_chunks(
+    records: dict[str, ShipRecord],
+) -> list[tuple[str, str]]:
+    """Build per-stat top-N ranking chunks suitable for RAG retrieval.
+
+    Returns a list of (name, body) tuples ready to be appended to scrape's
+    `new_rows`. Names follow `Ship rankings – <stat>`; bodies are numbered
+    leaderboards with ship name, value, and a parenthetical class+manufacturer
+    line for context."""
+    out: list[tuple[str, str]] = []
+    for stat_name, attr, unit in _RANKING_DESCRIPTORS:
+        ranked = sorted(
+            (
+                (r, getattr(r, attr))
+                for r in records.values()
+                if getattr(r, attr) is not None
+            ),
+            key=lambda pair: pair[1],
+            reverse=True,
+        )
+        if not ranked:
+            continue
+        top = ranked[:_RANKING_TOP_N]
+        unit_sep = "" if unit.startswith("×") else " "
+        lines = [f"Ships ranked by {stat_name.lower()} (highest first):", ""]
+        for i, (r, v) in enumerate(top, 1):
+            cls = _singularize_class(r.ship_class or "ship").lower()
+            mfr = r.manufacturer or "unknown"
+            value_str = _format_stat_value(v)
+            lines.append(
+                f"{i}. {r.key} — {value_str}{unit_sep}{unit} "
+                f"({mfr} {cls})"
+            )
+        if len(ranked) > _RANKING_TOP_N:
+            lines.append(f"")
+            lines.append(f"... and {len(ranked) - _RANKING_TOP_N} more.")
+        out.append((f"Ship rankings – {stat_name}", "\n".join(lines)))
+    return out
+
+
+def class_roster_chunk(
+    records: dict[str, ShipRecord],
+) -> tuple[str, str] | None:
+    """Build a single chunk listing every ship grouped by class.
+
+    Lets queries like 'all destroyers' / 'list every harvester' hit one chunk
+    instead of fishing per-ship Spec cards out of similarity scores."""
+    by_class: dict[str, list[str]] = {}
+    for r in records.values():
+        cls = r.ship_class or "Unclassified"
+        by_class.setdefault(cls, []).append(r.key)
+    if not by_class:
+        return None
+    lines = ["All ships grouped by class:", ""]
+    for cls in sorted(by_class):
+        ships = sorted(by_class[cls])
+        lines.append(f"{cls} ({len(ships)}): {', '.join(ships)}")
+    return ("Ship roster", "\n".join(lines))

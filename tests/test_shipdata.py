@@ -191,3 +191,62 @@ def test_spec_identity_includes_role(tiny_shipdata_lua):
     assert "a combat hull" in eclipse_text
     cudal_text = spec_sentences(records["Cudal"], records)
     assert "a combat hull" in cudal_text
+
+
+from shipdata import ranking_chunks, class_roster_chunk
+
+
+def test_ranking_chunks_returns_one_per_stat(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    chunks = ranking_chunks(records)
+    names = [n for n, _ in chunks]
+    assert "Ship rankings – Cargo capacity" in names
+    assert "Ship rankings – Hull modifier" in names
+    assert "Ship rankings – Shield modifier" in names
+    assert "Ship rankings – Armor modifier" in names
+    assert "Ship rankings – Warp speed" in names
+    assert "Ship rankings – Warp acceleration" in names
+    assert "Ship rankings – Crew capacity" in names
+
+
+def test_ranking_chunks_sorted_descending(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    chunks = dict(ranking_chunks(records))
+    body = chunks["Ship rankings – Cargo capacity"]
+    # Eclipse=1060, Cudal=Cudal-Marade=80 — Eclipse must come first.
+    eclipse_pos = body.index("Eclipse")
+    cudal_pos = body.index("Cudal")
+    assert eclipse_pos < cudal_pos
+
+
+def test_ranking_chunks_excludes_none_values(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    chunks = dict(ranking_chunks(records))
+    # Every entry that ships in the leaderboard must list a numeric value
+    # (no "None" strings leaking through).
+    for name, body in chunks.items():
+        assert "None" not in body, f"{name} contains a None value"
+
+
+def test_ranking_chunk_includes_class_and_manufacturer(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    chunks = dict(ranking_chunks(records))
+    body = chunks["Ship rankings – Cargo capacity"]
+    assert "(Kharon Forgeworks destroyer)" in body  # Eclipse
+    assert "(Frontier cutter)" in body              # Cudal
+
+
+def test_class_roster_lists_all_ships_grouped(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    name, body = class_roster_chunk(records)
+    assert name == "Ship roster"
+    # Cudal and Cudal-Marade share class Cutters; Eclipse is Destroyers.
+    assert "Cutters (2): Cudal, Cudal-Marade" in body
+    assert "Destroyers (1): Eclipse" in body
+
+
+def test_class_roster_groups_alphabetically_by_class(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    _, body = class_roster_chunk(records)
+    # Cutters before Destroyers alphabetically.
+    assert body.index("Cutters") < body.index("Destroyers")
