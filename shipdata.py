@@ -150,3 +150,109 @@ def load(session) -> ShipData:
     raw = parse_lua(parse["wikitext"])
     records = {k: ShipRecord.from_dict(k, v) for k, v in raw.items()}
     return ShipData(records=records, revid=int(parse["revid"]))
+
+
+def _format_hardpoints(hp: list[str]) -> str:
+    sizes = {"L": "large", "M": "medium", "S": "small", "T": "tiny"}
+    counts: dict[str, int] = {}
+    for h in hp:
+        counts[h] = counts.get(h, 0) + 1
+    parts: list[str] = []
+    for code in ("L", "M", "S", "T"):
+        n = counts.get(code, 0)
+        if n:
+            parts.append(f"{n} {sizes[code]}")
+    return ", ".join(parts) if parts else "no"
+
+
+def _identity_sentence(r: ShipRecord) -> str:
+    cls = (r.ship_class or "ship").lower()
+    mfr = r.manufacturer or "unknown-manufacturer"
+    return f"The {r.key} is a {mfr} {cls}."
+
+
+def _combat_sentence(r: ShipRecord) -> str:
+    parts: list[str] = []
+    mods = []
+    if r.hull_scale is not None:
+        mods.append(f"hull modifier is {r.hull_scale:g}×")
+    if r.shield_scale is not None:
+        mods.append(f"shield {r.shield_scale:g}×")
+    if r.armor_scale is not None:
+        mods.append(f"armor {r.armor_scale:g}×")
+    if mods:
+        parts.append("Its " + ", ".join(mods) + ".")
+    if r.hardpoints:
+        parts.append(f"It carries {_format_hardpoints(r.hardpoints)} hardpoints.")
+    misc: list[str] = []
+    if r.speed is not None:
+        spd = f"warps at {r.speed:g} ls/s"
+        if r.accel is not None:
+            spd += f" with {r.accel:g} ls/s² acceleration"
+        misc.append(spd)
+    if r.crew is not None:
+        misc.append(f"has {r.crew} crew slots")
+    if r.cargo is not None:
+        misc.append(f"carries {r.cargo} cargo units")
+    if misc:
+        parts.append("It " + ", ".join(misc) + ".")
+    return " ".join(parts)
+
+
+def _acquisition_sentence(r: ShipRecord) -> str:
+    if r.not_for_sale:
+        return (
+            f"The {r.key} is awarded as a story reward and is "
+            "not sold at any shipyard."
+        )
+    if r.shipyard_faction is None:
+        return ""
+    bits = [f"It sells at {r.shipyard_faction} shipyards"]
+    if r.shipyard_level is not None:
+        bits.append(f"from shipyard level {r.shipyard_level}")
+    if r.shipyard_rep is not None:
+        bits.append(f"at {r.shipyard_rep} reputation")
+    if r.player_level is not None:
+        bits.append(f"requiring player level {r.player_level}")
+    if r.conquest_rank is not None:
+        bits.append(f"and {r.conquest_rank} conquest rank")
+    return ", ".join(bits) + "."
+
+
+def _variant_sentence(
+    r: ShipRecord, all_records: dict[str, ShipRecord]
+) -> str:
+    if r.key == r.display_name:
+        return ""
+    canonical = next(
+        (
+            other for other in all_records.values()
+            if other.key == r.display_name
+            and other.key != r.key
+        ),
+        None,
+    )
+    if canonical is None:
+        return ""
+    mfr = r.manufacturer or "an alternate vendor"
+    return (
+        f"The {r.key} is the {mfr}-resold variant of the {canonical.key}."
+    )
+
+
+def spec_sentences(
+    record: ShipRecord, all_records: dict[str, ShipRecord]
+) -> str:
+    """Build a 1-3 paragraph natural-language Spec card body."""
+    paragraphs: list[str] = []
+    paragraphs.append(_identity_sentence(record))
+    combat = _combat_sentence(record)
+    if combat:
+        paragraphs.append(combat)
+    acquisition = _acquisition_sentence(record)
+    if acquisition:
+        paragraphs.append(acquisition)
+    variant = _variant_sentence(record, all_records)
+    if variant:
+        paragraphs.append(variant)
+    return "\n\n".join(paragraphs)

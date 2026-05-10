@@ -1,6 +1,6 @@
 import pytest
 
-from shipdata import ShipData, ShipRecord, load, parse_lua
+from shipdata import ShipData, ShipRecord, load, parse_lua, spec_sentences
 
 
 def test_parse_lua_extracts_three_ships(tiny_shipdata_lua):
@@ -100,3 +100,62 @@ def test_load_calls_api_once(tiny_shipdata_lua):
     sess = FakeSession(tiny_shipdata_lua)
     load(sess)
     assert sess.calls == 1
+
+
+def _records(lua):
+    return load(FakeSession(lua)).records
+
+
+def test_spec_identity_sentence(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal"], records)
+    assert "The Cudal is a Frontier cutter." in text
+
+
+def test_spec_combat_profile_includes_modifiers(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal"], records)
+    assert "hull modifier is 2.1×" in text
+    assert "shield 2.9×" in text
+    assert "armor 1.8×" in text
+
+
+def test_spec_combat_profile_includes_hardpoints(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Eclipse"], records)
+    assert "1 large, 3 medium" in text
+
+
+def test_spec_shipyard_sentence(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal"], records)
+    assert "It sells at Frontier shipyards" in text
+    assert "shipyard level 1+" in text
+    assert "Neutral reputation" in text
+    assert "player level 1" in text
+
+
+def test_spec_conquest_sentence(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal-Marade"], records)
+    assert "Cutthroat conquest rank" in text
+
+
+def test_spec_not_for_sale_sentence(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Eclipse"], records)
+    assert "awarded as a story reward" in text
+    assert "not sold at any shipyard" in text
+    assert "Frontier shipyards" not in text
+
+
+def test_spec_variant_sentence_links_canonical(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal-Marade"], records)
+    assert "Cudal-Marade is the Marade Wharf-resold variant of the Cudal" in text
+
+
+def test_spec_canonical_ship_has_no_variant_sentence(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal"], records)
+    assert "variant" not in text.lower()
