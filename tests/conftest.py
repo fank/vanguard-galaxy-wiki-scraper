@@ -13,3 +13,8 @@ def cudal_page_wikitext() -> str:
 @pytest.fixture
 def tiny_shipdata_lua() -> str:
     return (FIXTURES / "Module_ShipData_tiny.lua").read_text()
+
+
+@pytest.fixture
+def tiny_aspectdata_lua() -> str:
+    return (FIXTURES / "Module_AspectData_tiny.lua").read_text()

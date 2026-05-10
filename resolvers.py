@@ -88,3 +88,17 @@ def _shipbox_infobox(args: list[str], ctx: Any) -> str:
     card chunk by the scraper, so leaving an inline rendering here would
     duplicate them."""
     return ""
+
+
+@register("Aspectbox", "list")
+def _aspectbox_list(args: list[str], ctx: Any) -> str:
+    """Suppressed for the same reason — per-aspect Spec cards and the
+    aspect-roster chunk cover this content directly."""
+    return ""
+
+
+@register("Aspectbox", "legend")
+def _aspectbox_legend(args: list[str], ctx: Any) -> str:
+    """Suppressed: the rarity-generation legend is generic mechanics, not
+    aspect-specific data."""
+    return ""

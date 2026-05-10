@@ -28,6 +28,7 @@ from pathlib import Path
 
 import mwparserfromhell
 import requests
+import aspectdata as aspectdata_mod
 import shipdata as shipdata_mod
 
 API_URL = "https://vanguard-galaxy.fandom.com/api.php"
@@ -210,6 +211,17 @@ def _is_shipdata_derived(row_name: str) -> bool:
     )
 
 
+def _is_aspectdata_derived(row_name: str) -> bool:
+    """True for any chunk built from Module:AspectData. Re-emitted whenever
+    the Module's revid changes; preserved otherwise."""
+    return (
+        row_name.endswith(" – Aspect")
+        or " – Aspect (" in row_name
+        or row_name == "Aspect roster"
+        or row_name.startswith("Aspect roster (")
+    )
+
+
 def main_with_args(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--out", default="out", help="output dir (default: ./out)")
@@ -235,6 +247,7 @@ def main_with_args(argv: list[str] | None = None) -> int:
     session.headers["User-Agent"] = USER_AGENT
 
     shipdata_ctx = shipdata_mod.load(session)
+    aspectdata_ctx = aspectdata_mod.load(session)
 
     titles = list(list_articles(session))
     print(f"Found {len(titles)} articles", file=sys.stderr)
@@ -296,6 +309,31 @@ def main_with_args(argv: list[str] | None = None) -> int:
             n = roster_name if len(chunks) == 1 else f"{roster_name} ({j + 1}/{len(chunks)})"
             new_rows.append((n[:NAME_CAP], c))
 
+    manifest["__module_aspectdata"] = aspectdata_ctx.revid
+    aspectdata_changed = prev.get("__module_aspectdata") != aspectdata_ctx.revid
+
+    for key, record in sorted(aspectdata_ctx.records.items()):
+        if not record.has_image:
+            # Mirrors Module:Aspectbox's filter — placeholder/internal entries
+            # never reach the rendered wiki, so they shouldn't reach RAG either.
+            continue
+        body = aspectdata_mod.aspect_sentences(record)
+        if not body:
+            continue
+        name = f"{record.display_name} – Aspect"
+        chunks = chunk(body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    aspect_roster = aspectdata_mod.slot_roster_chunk(aspectdata_ctx.records)
+    if aspect_roster is not None:
+        ar_name, ar_body = aspect_roster
+        chunks = chunk(ar_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = ar_name if len(chunks) == 1 else f"{ar_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
     if args.dry_run:
         sample_key = "Cudal" if "Cudal" in shipdata_ctx.records else \
             next(iter(shipdata_ctx.records))
@@ -317,6 +355,11 @@ def main_with_args(argv: list[str] | None = None) -> int:
             for row in csv.DictReader(f):
                 if _is_shipdata_derived(row["name"]):
                     if shipdata_changed:
+                        continue
+                    kept.append((row["name"], row["text"]))
+                    continue
+                if _is_aspectdata_derived(row["name"]):
+                    if aspectdata_changed:
                         continue
                     kept.append((row["name"], row["text"]))
                     continue

@@ -38,11 +38,18 @@ def test_to_text_without_shipdata_drops_invokes(cudal_page_wikitext):
 
 class _SessAllPages:
     """Minimal session stub: returns a fixed allpages list, the Cudal page
-    wikitext, and a tiny Module:ShipData."""
+    wikitext, a tiny Module:ShipData, and (optionally) a tiny
+    Module:AspectData."""
 
-    def __init__(self, cudal_text: str, lua_text: str):
+    def __init__(
+        self,
+        cudal_text: str,
+        lua_text: str,
+        aspect_lua: str | None = None,
+    ):
         self.cudal_text = cudal_text
         self.lua_text = lua_text
+        self.aspect_lua = aspect_lua or "return {}"
         self.headers: dict[str, str] = {}
 
     def get(self, url, params=None, timeout=None):
@@ -56,6 +63,8 @@ class _SessAllPages:
             page = params.get("page")
             if page == "Module:ShipData":
                 return _Resp({"parse": {"wikitext": self.lua_text, "revid": 99}})
+            if page == "Module:AspectData":
+                return _Resp({"parse": {"wikitext": self.aspect_lua, "revid": 88}})
             return _Resp({"parse": {"wikitext": self.cudal_text, "revid": 7}})
         raise AssertionError(f"unexpected request: {params}")
 
@@ -126,3 +135,24 @@ def test_main_emits_ranking_and_roster_chunks(
     assert "Ship roster" in payload
     cargo = payload["Ship rankings – Cargo capacity"]["text"]
     assert cargo.index("Eclipse") < cargo.index("Cudal")
+
+
+def test_main_emits_aspect_chunks(
+    cudal_page_wikitext, tiny_shipdata_lua, tiny_aspectdata_lua, tmp_path, monkeypatch
+):
+    sess = _SessAllPages(cudal_page_wikitext, tiny_shipdata_lua, tiny_aspectdata_lua)
+    monkeypatch.setattr(scrape.requests, "Session", lambda: sess)
+    monkeypatch.setattr(scrape, "list_articles",
+                        lambda s: iter([("Cudal", 1)]))
+
+    rc = scrape.main_with_args(["--out", str(tmp_path), "--full", "--sleep", "0"])
+    assert rc == 0
+    payload = json.loads((tmp_path / "vg_wiki.json").read_text())
+    assert "Critical Attenuation – Aspect" in payload
+    assert "Gamma Ward – Aspect" in payload
+    assert "Aspect roster" in payload
+    # Placeholder entry (no image) must not show up as a Spec card.
+    assert "GenericElementResist – Aspect" not in payload
+    # Manifest sentinel landed.
+    manifest = json.loads((tmp_path / "vg_wiki.manifest.json").read_text())
+    assert manifest["__module_aspectdata"] == 88
