@@ -159,3 +159,18 @@ def test_spec_canonical_ship_has_no_variant_sentence(tiny_shipdata_lua):
     records = _records(tiny_shipdata_lua)
     text = spec_sentences(records["Cudal"], records)
     assert "variant" not in text.lower()
+
+
+def test_spec_combat_sentence_singularizes_crew(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal"], records)
+    # Cudal has crew=1 — must read "1 crew slot", not "1 crew slots".
+    assert "1 crew slot" in text
+    assert "1 crew slots" not in text
+
+
+def test_spec_combat_sentence_pluralizes_crew(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Eclipse"], records)
+    # Eclipse has crew=5.
+    assert "5 crew slots" in text

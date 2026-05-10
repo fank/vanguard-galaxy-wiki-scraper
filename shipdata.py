@@ -191,9 +191,11 @@ def _combat_sentence(r: ShipRecord) -> str:
             spd += f" with {r.accel:g} ls/s² acceleration"
         misc.append(spd)
     if r.crew is not None:
-        misc.append(f"has {r.crew} crew slots")
+        slots = "slot" if r.crew == 1 else "slots"
+        misc.append(f"has {r.crew} crew {slots}")
     if r.cargo is not None:
-        misc.append(f"carries {r.cargo} cargo units")
+        units = "unit" if r.cargo == 1 else "units"
+        misc.append(f"carries {r.cargo} cargo {units}")
     if misc:
         parts.append("It " + ", ".join(misc) + ".")
     return " ".join(parts)
