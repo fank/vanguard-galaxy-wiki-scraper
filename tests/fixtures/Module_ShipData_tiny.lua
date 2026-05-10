@@ -2,7 +2,7 @@ return {
     ["Cudal"] = {
         displayName = "Cudal",
         manufacturer = "Frontier",
-        class = "Cutter",
+        class = "Cutters",
         hullScale = 2.1,
         shieldScale = 2.9,
         armorScale = 1.8,
@@ -19,7 +19,7 @@ return {
     ["Cudal-Marade"] = {
         displayName = "Cudal",
         manufacturer = "Marade Wharf",
-        class = "Cutter",
+        class = "Cutters",
         hullScale = 2.1,
         shieldScale = 2.9,
         armorScale = 1.8,
@@ -38,7 +38,7 @@ return {
     ["Eclipse"] = {
         displayName = "Eclipse",
         manufacturer = "Kharon Forgeworks",
-        class = "Destroyer",
+        class = "Destroyers",
         hullScale = 8.1,
         shieldScale = 8.9,
         armorScale = 7.5,

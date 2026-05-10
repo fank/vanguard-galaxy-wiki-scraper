@@ -11,7 +11,7 @@ def test_parse_lua_extracts_three_ships(tiny_shipdata_lua):
 def test_parse_lua_extracts_string_fields(tiny_shipdata_lua):
     cudal = parse_lua(tiny_shipdata_lua)["Cudal"]
     assert cudal["manufacturer"] == "Frontier"
-    assert cudal["class"] == "Cutter"
+    assert cudal["class"] == "Cutters"
     assert cudal["shipyardFaction"] == "Frontier"
 
 
@@ -83,7 +83,7 @@ def test_shiprecord_exposes_named_fields(tiny_shipdata_lua):
     assert cudal.key == "Cudal"
     assert cudal.display_name == "Cudal"
     assert cudal.manufacturer == "Frontier"
-    assert cudal.ship_class == "Cutter"
+    assert cudal.ship_class == "Cutters"
     assert cudal.hardpoints == ["S", "S"]
     assert cudal.not_for_sale is False  # default when absent
 
@@ -109,7 +109,7 @@ def _records(lua):
 def test_spec_identity_sentence(tiny_shipdata_lua):
     records = _records(tiny_shipdata_lua)
     text = spec_sentences(records["Cudal"], records)
-    assert "The Cudal is a Frontier cutter." in text
+    assert "The Cudal is a Frontier cutter, a combat hull." in text
 
 
 def test_spec_combat_profile_includes_modifiers(tiny_shipdata_lua):
@@ -174,3 +174,20 @@ def test_spec_combat_sentence_pluralizes_crew(tiny_shipdata_lua):
     text = spec_sentences(records["Eclipse"], records)
     # Eclipse has crew=5.
     assert "5 crew slots" in text
+
+
+def test_spec_identity_singularizes_plural_class(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    text = spec_sentences(records["Cudal"], records)
+    # Live ShipData stores class as plurals ('Cutters'); the sentence must
+    # singularize so it reads naturally.
+    assert " cutters" not in text.lower()
+    assert "cutter" in text
+
+
+def test_spec_identity_includes_role(tiny_shipdata_lua):
+    records = _records(tiny_shipdata_lua)
+    eclipse_text = spec_sentences(records["Eclipse"], records)
+    assert "a combat hull" in eclipse_text
+    cudal_text = spec_sentences(records["Cudal"], records)
+    assert "a combat hull" in cudal_text

@@ -165,10 +165,54 @@ def _format_hardpoints(hp: list[str]) -> str:
     return ", ".join(parts) if parts else "no"
 
 
+# Map class (singular form, after de-pluralization) -> high-level role for the
+# identity sentence's "a combat/mining/salvage/cargo hull" closer.
+_CLASS_ROLE = {
+    "Cutter": "combat",
+    "Gunship": "combat",
+    "Corvette": "combat",
+    "Frigate": "combat",
+    "Destroyer": "combat",
+    "Mining Skiff": "mining",
+    "Hewer": "mining",
+    "Dredger": "mining",
+    "Breaker": "mining",
+    "Harvester": "mining",
+    "Salvage Skiff": "salvage",
+    "Scow": "salvage",
+    "Scrapper": "salvage",
+    "Wrecker": "salvage",
+    "Reclaimer": "salvage",
+    "Courier": "cargo",
+    "Ferry": "cargo",
+    "Hauler": "cargo",
+    "Freighter": "cargo",
+    "Carrack": "cargo",
+}
+
+
+def _singularize_class(cls: str) -> str:
+    """Module:ShipData stores class as plurals ('Cutters', 'Destroyers').
+    The wiki convention is build_shipdata.py's CLASS_PLURAL map; reversing it
+    here lets the identity sentence read naturally."""
+    if cls in _CLASS_ROLE:
+        return cls
+    if cls.endswith("ies"):  # Ferries -> Ferry
+        return cls[:-3] + "y"
+    if cls.endswith("s") and not cls.endswith("ss"):
+        return cls[:-1]
+    return cls
+
+
 def _identity_sentence(r: ShipRecord) -> str:
-    cls = (r.ship_class or "ship").lower()
+    raw = r.ship_class or "ship"
+    singular = _singularize_class(raw)
+    cls_text = singular.lower()
     mfr = r.manufacturer or "unknown-manufacturer"
-    return f"The {r.key} is a {mfr} {cls}."
+    role = _CLASS_ROLE.get(singular)
+    if role:
+        return f"The {r.key} is a {mfr} {cls_text}, a {role} hull."
+    return f"The {r.key} is a {mfr} {cls_text}."
 
 
 def _combat_sentence(r: ShipRecord) -> str:
