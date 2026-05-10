@@ -74,3 +74,79 @@ def parse_lua(text: str) -> dict[str, dict[str, Any]]:
             fields[fm.group(2)] = _coerce(fm.group(3))
         records[key] = fields
     return records
+
+
+@dataclass(frozen=True)
+class ShipRecord:
+    key: str
+    display_name: str
+    manufacturer: str | None = None
+    ship_class: str | None = None
+    hull_scale: float | None = None
+    shield_scale: float | None = None
+    armor_scale: float | None = None
+    hardpoints: list[str] | None = None
+    speed: float | None = None
+    accel: float | None = None
+    crew: int | None = None
+    cargo: int | None = None
+    player_level: int | None = None
+    shipyard_level: str | None = None
+    shipyard_rep: str | None = None
+    shipyard_faction: str | None = None
+    conquest_rank: str | None = None
+    not_for_sale: bool = False
+
+    @classmethod
+    def from_dict(cls, key: str, d: dict[str, Any]) -> "ShipRecord":
+        return cls(
+            key=key,
+            display_name=d.get("displayName", key),
+            manufacturer=d.get("manufacturer"),
+            ship_class=d.get("class"),
+            hull_scale=d.get("hullScale"),
+            shield_scale=d.get("shieldScale"),
+            armor_scale=d.get("armorScale"),
+            hardpoints=d.get("hardpoints"),
+            speed=d.get("speed"),
+            accel=d.get("accel"),
+            crew=d.get("crew"),
+            cargo=d.get("cargo"),
+            player_level=d.get("playerLevel"),
+            shipyard_level=(
+                str(d["shipyardLevel"]) if "shipyardLevel" in d else None
+            ),
+            shipyard_rep=d.get("shipyardRep"),
+            shipyard_faction=d.get("shipyardFaction"),
+            conquest_rank=d.get("conquestRank"),
+            not_for_sale=bool(d.get("notForSale", False)),
+        )
+
+
+@dataclass(frozen=True)
+class ShipData:
+    records: dict[str, ShipRecord]
+    revid: int
+
+
+_API_URL = "https://vanguard-galaxy.fandom.com/api.php"
+
+
+def load(session) -> ShipData:
+    """Fetch and parse Module:ShipData. One network call per scraper run."""
+    resp = session.get(
+        _API_URL,
+        params={
+            "action": "parse",
+            "page": "Module:ShipData",
+            "prop": "wikitext|revid",
+            "format": "json",
+            "formatversion": "2",
+        },
+        timeout=30,
+    )
+    resp.raise_for_status()
+    parse = resp.json()["parse"]
+    raw = parse_lua(parse["wikitext"])
+    records = {k: ShipRecord.from_dict(k, v) for k, v in raw.items()}
+    return ShipData(records=records, revid=int(parse["revid"]))
