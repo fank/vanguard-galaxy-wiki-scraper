@@ -90,3 +90,21 @@ def test_main_records_shipdata_revid_in_manifest(
     scrape.main_with_args(["--out", str(tmp_path), "--full", "--sleep", "0"])
     manifest = json.loads((tmp_path / "vg_wiki.manifest.json").read_text())
     assert manifest["__module_shipdata"] == 99
+
+
+def test_dry_run_prints_sample_card_and_writes_nothing(
+    cudal_page_wikitext, tiny_shipdata_lua, tmp_path, monkeypatch, capsys
+):
+    sess = _SessAllPages(cudal_page_wikitext, tiny_shipdata_lua)
+    monkeypatch.setattr(scrape.requests, "Session", lambda: sess)
+    monkeypatch.setattr(scrape, "list_articles",
+                        lambda s: iter([("Cudal", 1)]))
+
+    rc = scrape.main_with_args(
+        ["--out", str(tmp_path), "--full", "--sleep", "0", "--dry-run"]
+    )
+    assert rc == 0
+    assert not (tmp_path / "vg_wiki.json").exists()
+    out = capsys.readouterr().out
+    assert "Cudal – Spec" in out
+    assert "Frontier cutter" in out

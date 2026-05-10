@@ -205,6 +205,8 @@ def main_with_args(argv: list[str] | None = None) -> int:
                     help="ignore manifest, re-emit every page")
     ap.add_argument("--sleep", type=float, default=0.1,
                     help="seconds between API calls (default: 0.1)")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="print row count + a sample Spec card and exit")
     args = ap.parse_args(argv)
 
     out_dir = Path(args.out)
@@ -267,6 +269,18 @@ def main_with_args(argv: list[str] | None = None) -> int:
         for j, c in enumerate(chunks):
             n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
             new_rows.append((n[:NAME_CAP], c))
+
+    if args.dry_run:
+        sample_key = "Cudal" if "Cudal" in shipdata_ctx.records else \
+            next(iter(shipdata_ctx.records))
+        sample_body = shipdata_mod.spec_sentences(
+            shipdata_ctx.records[sample_key], shipdata_ctx.records
+        )
+        print(f"would write {len(new_rows)} rows")
+        print()
+        print(f"=== {sample_key} – Spec ===")
+        print(sample_body)
+        return 0
 
     # Incremental merge: keep prior rows for unchanged pages, replace rows for changed pages.
     if prev and not args.full and csv_path.exists():
