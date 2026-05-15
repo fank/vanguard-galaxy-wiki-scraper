@@ -28,6 +28,8 @@ from pathlib import Path
 
 import mwparserfromhell
 import requests
+import aspectdata as aspectdata_mod
+import shipdata as shipdata_mod
 
 API_URL = "https://vanguard-galaxy.fandom.com/api.php"
 USER_AGENT = (
@@ -133,8 +135,37 @@ def strip_file_links(code: mwparserfromhell.wikicode.Wikicode) -> None:
                 continue
 
 
-def to_text(wikitext: str) -> str:
+def resolve_invokes(code: mwparserfromhell.wikicode.Wikicode, shipdata) -> None:
+    """Substitute every {{#invoke:Module|fn|args}} call with its handler's
+    return value. Calls without a registered handler are removed."""
+    import resolvers
+
+    for tpl in list(code.filter_templates(recursive=True)):
+        name = str(tpl.name).strip()
+        if not name.startswith("#invoke:"):
+            continue
+        # mwparserfromhell stores `#invoke:Module|fn|args...` as:
+        #   tpl.name  = "#invoke:Module"
+        #   tpl.params[0] = "fn"
+        #   tpl.params[1:] = positional/named args
+        module = name.split(":", 1)[1].strip()
+        if not tpl.params:
+            replacement = ""
+        else:
+            fn = str(tpl.params[0].value).strip()
+            args = [str(p.value).strip() for p in tpl.params[1:]]
+            out = resolvers.resolve(module, fn, args, ctx=shipdata)
+            replacement = out if out is not None else ""
+        try:
+            code.replace(tpl, mwparserfromhell.parse(replacement))
+        except ValueError:
+            # Parent already replaced this invoke (nested case).
+            continue
+
+
+def to_text(wikitext: str, shipdata=None) -> str:
     code = mwparserfromhell.parse(wikitext)
+    resolve_invokes(code, shipdata)
     strip_file_links(code)
     render_templates_inline(code)
     text = code.strip_code(normalize=True, collapse=True)
@@ -168,14 +199,45 @@ def chunk(text: str, cap: int) -> list[str]:
     return out
 
 
-def main() -> int:
+def _is_shipdata_derived(row_name: str) -> bool:
+    """True for any chunk built from Module:ShipData. Re-emitted whenever the
+    Module's revid changes; preserved otherwise."""
+    return (
+        row_name.endswith(" – Spec")
+        or " – Spec (" in row_name
+        or row_name.startswith("Ship rankings – ")
+        or row_name == "Ship roster"
+        or row_name.startswith("Ship roster (")
+    )
+
+
+def _is_aspectdata_derived(row_name: str) -> bool:
+    """True for any chunk built from Module:AspectData. Re-emitted whenever
+    the Module's revid changes; preserved otherwise."""
+    return (
+        row_name.endswith(" – Aspect")
+        or " – Aspect (" in row_name
+        or row_name == "Aspect roster"
+        or row_name.startswith("Aspect roster (")
+        or row_name.startswith("Aspects in ")
+        or row_name == "Common aspects"
+        or row_name.startswith("Common aspects (")
+        or row_name == "Rare aspects"
+        or row_name.startswith("Rare aspects (")
+        or row_name.startswith("Aspects boosting ")
+    )
+
+
+def main_with_args(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--out", default="out", help="output dir (default: ./out)")
     ap.add_argument("--full", action="store_true",
                     help="ignore manifest, re-emit every page")
     ap.add_argument("--sleep", type=float, default=0.1,
                     help="seconds between API calls (default: 0.1)")
-    args = ap.parse_args()
+    ap.add_argument("--dry-run", action="store_true",
+                    help="print row count + a sample Spec card and exit")
+    args = ap.parse_args(argv)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -189,6 +251,9 @@ def main() -> int:
 
     session = requests.Session()
     session.headers["User-Agent"] = USER_AGENT
+
+    shipdata_ctx = shipdata_mod.load(session)
+    aspectdata_ctx = aspectdata_mod.load(session)
 
     titles = list(list_articles(session))
     print(f"Found {len(titles)} articles", file=sys.stderr)
@@ -214,7 +279,7 @@ def main() -> int:
             continue
         changed += 1
         for sec_name, sec_body in split_sections(wikitext, title):
-            text = to_text(sec_body)
+            text = to_text(sec_body, shipdata=shipdata_ctx)
             if not text:
                 continue
             chunks = chunk(text, TEXT_CAP)
@@ -223,12 +288,97 @@ def main() -> int:
                 new_rows.append((name[:NAME_CAP], c))
         print(f"[{i:>3}/{len(titles)}] {title} (rev {revid})", file=sys.stderr)
 
+    manifest["__module_shipdata"] = shipdata_ctx.revid
+    shipdata_changed = prev.get("__module_shipdata") != shipdata_ctx.revid
+
+    for key, record in sorted(shipdata_ctx.records.items()):
+        body = shipdata_mod.spec_sentences(record, shipdata_ctx.records)
+        if not body:
+            continue
+        name = f"{key} – Spec"
+        chunks = chunk(body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    for ranking_name, ranking_body in shipdata_mod.ranking_chunks(shipdata_ctx.records):
+        chunks = chunk(ranking_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = ranking_name if len(chunks) == 1 else f"{ranking_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    roster = shipdata_mod.class_roster_chunk(shipdata_ctx.records)
+    if roster is not None:
+        roster_name, roster_body = roster
+        chunks = chunk(roster_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = roster_name if len(chunks) == 1 else f"{roster_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    manifest["__module_aspectdata"] = aspectdata_ctx.revid
+    aspectdata_changed = prev.get("__module_aspectdata") != aspectdata_ctx.revid
+
+    for key, record in sorted(aspectdata_ctx.records.items()):
+        if not record.has_image:
+            # Mirrors Module:Aspectbox's filter — placeholder/internal entries
+            # never reach the rendered wiki, so they shouldn't reach RAG either.
+            continue
+        body = aspectdata_mod.aspect_sentences(record)
+        if not body:
+            continue
+        name = f"{record.display_name} – Aspect"
+        chunks = chunk(body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    aspect_roster = aspectdata_mod.slot_roster_chunk(aspectdata_ctx.records)
+    if aspect_roster is not None:
+        ar_name, ar_body = aspect_roster
+        chunks = chunk(ar_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = ar_name if len(chunks) == 1 else f"{ar_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    for aggregate_name, aggregate_body in (
+        list(aspectdata_mod.per_slot_chunks(aspectdata_ctx.records))
+        + list(aspectdata_mod.per_rarity_chunks(aspectdata_ctx.records))
+        + list(aspectdata_mod.per_effect_chunks(aspectdata_ctx.records))
+    ):
+        chunks = chunk(aggregate_body, TEXT_CAP)
+        for j, c in enumerate(chunks):
+            n = aggregate_name if len(chunks) == 1 else f"{aggregate_name} ({j + 1}/{len(chunks)})"
+            new_rows.append((n[:NAME_CAP], c))
+
+    if args.dry_run:
+        sample_key = "Cudal" if "Cudal" in shipdata_ctx.records else \
+            next(iter(shipdata_ctx.records))
+        sample_body = shipdata_mod.spec_sentences(
+            shipdata_ctx.records[sample_key], shipdata_ctx.records
+        )
+        print(f"would write {len(new_rows)} rows")
+        print()
+        print(f"=== {sample_key} – Spec ===")
+        print(sample_body)
+        return 0
+
     # Incremental merge: keep prior rows for unchanged pages, replace rows for changed pages.
     if prev and not args.full and csv_path.exists():
         kept: list[tuple[str, str]] = []
-        changed_titles = {t for t, r in manifest.items() if prev.get(t) != r}
+        changed_titles = {t for t, r in manifest.items()
+                          if not t.startswith("__") and prev.get(t) != r}
         with csv_path.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
+                if _is_shipdata_derived(row["name"]):
+                    if shipdata_changed:
+                        continue
+                    kept.append((row["name"], row["text"]))
+                    continue
+                if _is_aspectdata_derived(row["name"]):
+                    if aspectdata_changed:
+                        continue
+                    kept.append((row["name"], row["text"]))
+                    continue
                 page = row["name"].split(" – ", 1)[0]
                 if page in changed_titles or page not in manifest:
                     continue
@@ -263,6 +413,10 @@ def main() -> int:
         file=sys.stderr,
     )
     return 0
+
+
+def main() -> int:
+    return main_with_args(None)
 
 
 if __name__ == "__main__":
