@@ -1,5 +1,9 @@
 # vanguard-galaxy-wiki-scraper
 
+> **⚠ DEPRECATED** — This project is superseded by [moodlehq/wiki-rag](https://github.com/moodlehq/wiki-rag), a complete end-to-end RAG pipeline that ingests MediaWiki sites natively via the API, indexes into Milvus, and serves via an OpenAI-compatible API and MCP server. No custom middleware or scraping tooling required.
+>
+> This repository is kept for reference only. No further development planned.
+
 Section-grained scraper for [vanguard-galaxy.fandom.com](https://vanguard-galaxy.fandom.com/), built to feed the [vrt-cogs Assistant cog](https://github.com/vertyco/vrt-cogs/tree/main/assistant) (a Discord RAG bot framework). Outputs CSV and JSON in the exact shape the cog's `?assistant importcsv` / `?assistant importjson` commands expect.
 
 Uses the public MediaWiki API (`api.php`) — no scraping, no Cloudflare workarounds, no bot password required for reads.
@@ -139,6 +143,19 @@ calls during test runs.
 ## Targeting a different wiki
 
 Single-wiki tool today — `API_URL` is hardcoded at the top of `scrape.py`. Pointing it at any other Fandom wiki only needs that constant changed (and possibly the `USER_AGENT` for politeness). The MediaWiki API surface is identical across Fandom.
+
+## Migration to wiki-rag
+
+[moodlehq/wiki-rag](https://github.com/moodlehq/wiki-rag) replaces this scraper entirely:
+
+| This project | wiki-rag equivalent |
+|---|---|
+| `scrape.py` (custom MediaWiki fetcher) | `wr-load` — native MediaWiki API dump, incremental mode |
+| `split_sections()` + chunking | `wr-index` — fixed/paragraph chunking with overlap, Milvus vector store |
+| CSV/JSON flat file output | Vector index (Milvus) + `wr-server` (OpenAI API) / `wr-mcp` (MCP protocol) |
+| Manual re-import into Discord cog | Built-in query serving with hybrid search, HyDE, query rewrite |
+
+The only features **not** covered by wiki-rag out of the box are the structured ship/aspect Spec cards and ranking rosters (`shipdata.py` / `aspectdata.py`). Those could be migrated into wiki templates or a lightweight pre-processing step if needed.
 
 ## Acknowledgements
 
