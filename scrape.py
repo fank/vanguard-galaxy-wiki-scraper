@@ -36,8 +36,13 @@ USER_AGENT = (
     "Fankserver-VGWikiScraper/0.1 "
     "(+https://vanguard-galaxy.fandom.com/wiki/User:Fankserver)"
 )
-TEXT_CAP = 4000  # vrt-cogs assistant truncates text at 4000 chars
-NAME_CAP = 100   # and names at 100
+TEXT_CAP = 1000  # ~465-token worst-case ceiling at ~2.15 chars/token for
+                 # dense table-dump content (Gemma's SentencePiece tokenizer
+                 # barely sub-word-merges short identifiers in stat tables).
+                 # Safely under the 512-token batch limit of local embedding
+                 # models (e.g. embeddinggemma). Also aligns with the
+                 # empirically-better "short focused chunk" retrieval pattern.
+NAME_CAP = 100   # vrt-cogs assistant truncates names at 100
 
 
 def api(session: requests.Session, **params) -> dict:
@@ -81,22 +86,81 @@ IMAGE_PARAM_NAMES = {
     "picture", "portrait", "pic", "file",
 }
 
+CATEGORY_LINE_RE = re.compile(r"^\s*Category:[^\n]*\n?", re.MULTILINE)
+
+# Sections whose H2 title's final word matches one of these get folded into
+# the page's Overview chunk instead of standing alone. They are typically
+# bare name lists ("Midas\nWaldo") that produce sparse, noisy embeddings.
+FOLD_SECTION_LABELS = {
+    "characters": "Characters",
+    "personnel": "Personnel",
+    "crew": "Crew",
+    "members": "Members",
+    "staff": "Staff",
+}
+
+# Sections dropped entirely — meant for image display or stub categories.
+# `Aspect List` is also excluded here because shipdata/aspectdata regenerate
+# that content as structured Spec/Roster chunks; emitting the raw table dump
+# would only add noise to RAG retrieval.
+DROP_SECTION_TITLES = {"gallery"}
+DROP_SECTION_FULL_TITLES = {"aspect list"}
+
+# Pages excluded from the regular per-section scrape entirely because their
+# canonical content is already emitted as structured chunks elsewhere
+# (Ship List → per-ship Spec cards + rankings, etc.).
+EXCLUDE_PAGES = {"Ship List"}
+
+
+def _classify_section(sec_title: str) -> tuple[str, str | None]:
+    """Return ('keep', None), ('drop', None), or ('fold', label) for an H2 title."""
+    words = sec_title.strip().split()
+    if not words:
+        return "keep", None
+    full = sec_title.strip().lower()
+    last = words[-1].lower()
+    if full in DROP_SECTION_FULL_TITLES or last in DROP_SECTION_TITLES:
+        return "drop", None
+    if last in FOLD_SECTION_LABELS:
+        return "fold", FOLD_SECTION_LABELS[last]
+    return "keep", None
+
 
 def split_sections(wikitext: str, page_title: str):
-    """Yield (entry_name, body_wikitext). Lead before first H2 → 'Overview'."""
+    """Return list of (entry_name, body_wikitext). Lead before first H2 → 'Overview'.
+    Sections classified as 'fold' are appended to the Overview body with a label
+    prefix; 'drop' sections are skipped."""
     matches = list(SECTION_RE.finditer(wikitext))
     if not matches:
-        yield page_title, wikitext
-        return
-    lead = wikitext[: matches[0].start()].strip()
-    if lead:
-        yield f"{page_title} – Overview", lead
+        return [(page_title, wikitext)] if wikitext.strip() else []
+
+    overview_body = wikitext[: matches[0].start()].strip()
+    folded_parts: list[str] = []
+    kept: list[tuple[str, str]] = []
+
     for i, m in enumerate(matches):
         sec_title = mwparserfromhell.parse(m.group(1).strip()).strip_code().strip()
         end = matches[i + 1].start() if i + 1 < len(matches) else len(wikitext)
         body = wikitext[m.end():end].strip()
-        if body:
-            yield f"{page_title} – {sec_title}", body
+        if not body:
+            continue
+        kind, label = _classify_section(sec_title)
+        if kind == "drop":
+            continue
+        if kind == "fold":
+            folded_parts.append(f"{label}: {body}")
+            continue
+        kept.append((f"{page_title} – {sec_title}", body))
+
+    result: list[tuple[str, str]] = []
+    if overview_body or folded_parts:
+        merged = overview_body
+        if folded_parts:
+            extra = "\n\n".join(folded_parts)
+            merged = f"{merged}\n\n{extra}" if merged else extra
+        result.append((f"{page_title} – Overview", merged))
+    result.extend(kept)
+    return result
 
 
 def render_templates_inline(code: mwparserfromhell.wikicode.Wikicode) -> None:
@@ -171,6 +235,9 @@ def to_text(wikitext: str, shipdata=None) -> str:
     text = code.strip_code(normalize=True, collapse=True)
     # Final sweep: any bare filename survivors (raw gallery cells, etc.)
     text = IMAGE_EXT_RE.sub("", text)
+    # strip_code leaves [[Category:Foo]] as the bare line "Category:Foo" —
+    # noise for RAG, drop it.
+    text = CATEGORY_LINE_RE.sub("", text)
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
@@ -197,6 +264,26 @@ def chunk(text: str, cap: int) -> list[str]:
         for i in range(0, len(p), cap):
             out.append(p[i:i + cap])
     return out
+
+
+def _emit_chunks(name: str, text: str, rows: list[tuple[str, str]]) -> None:
+    """Split body to fit TEXT_CAP, then prepend the chunk name as a header to
+    *each* sub-chunk and append (display_name, body) rows.
+
+    The header lets the embedding model see the page/section topic — a bare
+    'Midas' becomes 'Darkspace Compact – Characters\\n\\nMidas', which embeds
+    against the right neighborhood instead of noise. Prepending happens *after*
+    body splitting (not before) so every sub-chunk carries the header — splitting
+    first would leave the header alone in chunk 1/N and strip it from the rest."""
+    if not text:
+        return
+    header = f"{name}\n\n"
+    # Reserve cap for the header so each emitted chunk stays under TEXT_CAP.
+    body_cap = max(1, TEXT_CAP - len(header))
+    body_chunks = chunk(text, body_cap)
+    for j, c in enumerate(body_chunks):
+        display = name if len(body_chunks) == 1 else f"{name} ({j + 1}/{len(body_chunks)})"
+        rows.append((display[:NAME_CAP], header + c))
 
 
 def _is_shipdata_derived(row_name: str) -> bool:
@@ -262,8 +349,15 @@ def main_with_args(argv: list[str] | None = None) -> int:
     manifest: dict[str, int] = {}
     changed = 0
     skipped = 0
+    excluded = 0
 
     for i, (title, _pageid) in enumerate(titles, 1):
+        if title in EXCLUDE_PAGES:
+            # Source pages for structured chunks (e.g. Ship List) — skip the
+            # regular section-by-section scrape; the structured pipelines emit
+            # higher-quality content from the same source.
+            excluded += 1
+            continue
         time.sleep(args.sleep)
         try:
             revid, wikitext = parse_page(session, title)
@@ -280,12 +374,7 @@ def main_with_args(argv: list[str] | None = None) -> int:
         changed += 1
         for sec_name, sec_body in split_sections(wikitext, title):
             text = to_text(sec_body, shipdata=shipdata_ctx)
-            if not text:
-                continue
-            chunks = chunk(text, TEXT_CAP)
-            for j, c in enumerate(chunks):
-                name = sec_name if len(chunks) == 1 else f"{sec_name} ({j + 1}/{len(chunks)})"
-                new_rows.append((name[:NAME_CAP], c))
+            _emit_chunks(sec_name, text, new_rows)
         print(f"[{i:>3}/{len(titles)}] {title} (rev {revid})", file=sys.stderr)
 
     manifest["__module_shipdata"] = shipdata_ctx.revid
@@ -293,27 +382,14 @@ def main_with_args(argv: list[str] | None = None) -> int:
 
     for key, record in sorted(shipdata_ctx.records.items()):
         body = shipdata_mod.spec_sentences(record, shipdata_ctx.records)
-        if not body:
-            continue
-        name = f"{key} – Spec"
-        chunks = chunk(body, TEXT_CAP)
-        for j, c in enumerate(chunks):
-            n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
-            new_rows.append((n[:NAME_CAP], c))
+        _emit_chunks(f"{key} – Spec", body, new_rows)
 
     for ranking_name, ranking_body in shipdata_mod.ranking_chunks(shipdata_ctx.records):
-        chunks = chunk(ranking_body, TEXT_CAP)
-        for j, c in enumerate(chunks):
-            n = ranking_name if len(chunks) == 1 else f"{ranking_name} ({j + 1}/{len(chunks)})"
-            new_rows.append((n[:NAME_CAP], c))
+        _emit_chunks(ranking_name, ranking_body, new_rows)
 
     roster = shipdata_mod.class_roster_chunk(shipdata_ctx.records)
     if roster is not None:
-        roster_name, roster_body = roster
-        chunks = chunk(roster_body, TEXT_CAP)
-        for j, c in enumerate(chunks):
-            n = roster_name if len(chunks) == 1 else f"{roster_name} ({j + 1}/{len(chunks)})"
-            new_rows.append((n[:NAME_CAP], c))
+        _emit_chunks(roster[0], roster[1], new_rows)
 
     manifest["__module_aspectdata"] = aspectdata_ctx.revid
     aspectdata_changed = prev.get("__module_aspectdata") != aspectdata_ctx.revid
@@ -324,31 +400,18 @@ def main_with_args(argv: list[str] | None = None) -> int:
             # never reach the rendered wiki, so they shouldn't reach RAG either.
             continue
         body = aspectdata_mod.aspect_sentences(record)
-        if not body:
-            continue
-        name = f"{record.display_name} – Aspect"
-        chunks = chunk(body, TEXT_CAP)
-        for j, c in enumerate(chunks):
-            n = name if len(chunks) == 1 else f"{name} ({j + 1}/{len(chunks)})"
-            new_rows.append((n[:NAME_CAP], c))
+        _emit_chunks(f"{record.display_name} – Aspect", body, new_rows)
 
     aspect_roster = aspectdata_mod.slot_roster_chunk(aspectdata_ctx.records)
     if aspect_roster is not None:
-        ar_name, ar_body = aspect_roster
-        chunks = chunk(ar_body, TEXT_CAP)
-        for j, c in enumerate(chunks):
-            n = ar_name if len(chunks) == 1 else f"{ar_name} ({j + 1}/{len(chunks)})"
-            new_rows.append((n[:NAME_CAP], c))
+        _emit_chunks(aspect_roster[0], aspect_roster[1], new_rows)
 
     for aggregate_name, aggregate_body in (
         list(aspectdata_mod.per_slot_chunks(aspectdata_ctx.records))
         + list(aspectdata_mod.per_rarity_chunks(aspectdata_ctx.records))
         + list(aspectdata_mod.per_effect_chunks(aspectdata_ctx.records))
     ):
-        chunks = chunk(aggregate_body, TEXT_CAP)
-        for j, c in enumerate(chunks):
-            n = aggregate_name if len(chunks) == 1 else f"{aggregate_name} ({j + 1}/{len(chunks)})"
-            new_rows.append((n[:NAME_CAP], c))
+        _emit_chunks(aggregate_name, aggregate_body, new_rows)
 
     if args.dry_run:
         sample_key = "Cudal" if "Cudal" in shipdata_ctx.records else \
@@ -387,8 +450,15 @@ def main_with_args(argv: list[str] | None = None) -> int:
     else:
         rows = new_rows
 
-    # Stable order makes diffs reviewable.
-    rows.sort(key=lambda r: r[0])
+    # Dedupe by name, last-write-wins. The structured-chunk emitters always
+    # run (regardless of whether their source page changed), so on incremental
+    # runs both the kept-prior and freshly-emitted versions of each Spec/
+    # Ranking/Roster chunk end up in `rows`. New emissions are appended last,
+    # so they win — guaranteeing the CSV reflects the latest emitter output.
+    seen: dict[str, str] = {}
+    for name, text in rows:
+        seen[name] = text
+    rows = sorted(seen.items(), key=lambda r: r[0])
 
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -409,7 +479,8 @@ def main_with_args(argv: list[str] | None = None) -> int:
 
     print(
         f"\nWrote {len(rows)} rows to {csv_path} and {json_path}\n"
-        f"Pages: {changed} changed, {skipped} unchanged, {len(titles) - changed - skipped} errored",
+        f"Pages: {changed} changed, {skipped} unchanged, {excluded} excluded, "
+        f"{len(titles) - changed - skipped - excluded} errored",
         file=sys.stderr,
     )
     return 0

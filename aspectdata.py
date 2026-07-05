@@ -1,8 +1,11 @@
-"""Module:AspectData accessor for the wiki scraper.
+"""Aspects page accessor for the wiki scraper.
 
-Mirrors `shipdata.py`: fetches the Lua data module via api.php, parses it
-into typed `AspectRecord`s, and builds RAG-friendly chunks (per-aspect Spec
-cards + a single slot-roster).
+Mirrors `shipdata.py`: fetches the [[Aspects]] content page, parses its
+Aspect List ``<tabber>`` + wikitables into typed `AspectRecord`s, and builds
+RAG-friendly chunks (per-aspect Spec cards + slot-grouped rosters).
+
+Replaces the previous Module:AspectData Lua pipeline — Lua modules were
+removed from the wiki and aspect data now lives in the Aspects page tables.
 """
 from __future__ import annotations
 
@@ -10,35 +13,23 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from shipdata import parse_lua
+from shipdata import _split_table_rows
 
 
 _API_URL = "https://vanguard-galaxy.fandom.com/api.php"
 
 
-# Inner-table extractor for the `boostStats` field. parse_lua leaves nested
-# tables as raw text (its top-level comma split can't safely tokenize them),
-# so we re-parse the captured value with this dedicated pattern. AspectData
-# always emits the three keys in this order; if the format ever changes the
-# pattern needs to grow with it.
-_BOOST_RE = re.compile(
-    r'\{\s*stat\s*=\s*"([^"]+)"\s*,\s*'
-    r'amount\s*=\s*([0-9.eE+-]+)\s*,\s*'
-    r'multiplier\s*=\s*([0-9.eE+-]+)\s*\}'
-)
-
-
-def _parse_boost_stats(raw: Any) -> list[dict[str, float | str]]:
-    if not isinstance(raw, str):
-        return []
-    return [
-        {
-            "stat": m.group(1),
-            "amount": float(m.group(2)),
-            "multiplier": float(m.group(3)),
-        }
-        for m in _BOOST_RE.finditer(raw)
-    ]
+# Tabber tab name → canonical slot enum used by AspectRecord. Values mirror
+# the `_SLOT_LABEL` keys so the rest of the pipeline stays unchanged.
+_TAB_SLOT = {
+    "Weapons":     "Weapons",
+    "Dronebay":    "Dronebay",
+    "Scanner":     "Scanner",
+    "Hull":        "Hull",
+    "Armor":       "Armor",
+    "All Modules": "AllModules",
+    "All Items":   "AllItems",
+}
 
 
 # Display labels for slot enum values. Mirrors Module:Aspectbox.SLOT_LABEL so
@@ -72,6 +63,11 @@ class AspectRecord:
 
     @classmethod
     def from_dict(cls, key: str, d: dict[str, Any]) -> "AspectRecord":
+        # boostStats was a structured field on the old Module:AspectData; the
+        # Aspects content page doesn't expose it (the effect lives in the prose
+        # description), so it's an empty tuple here. `_boost_sentence` already
+        # short-circuits on empty input, so the Spec card just relies on the
+        # description for stat-effect language.
         return cls(
             key=key,
             display_name=d.get("displayName") or key,
@@ -79,7 +75,7 @@ class AspectRecord:
             description=d.get("description"),
             common=bool(d.get("common", True)),
             size_note=d.get("sizeNote"),
-            boost_stats=tuple(_parse_boost_stats(d.get("boostStats"))),
+            boost_stats=(),
         )
 
     @property
@@ -93,13 +89,103 @@ class AspectData:
     revid: int
 
 
+# --- Aspects-page table parser ----------------------------------------------
+
+# Color-span around an aspect name encodes rarity: green = Common, purple = Rare.
+_ASPECT_NAME_RE = re.compile(
+    r'<span\s+style="color:\s*(?P<color>[A-Za-z ]+?)\s*"\s*>(?P<name>[^<]+)</span>',
+    re.IGNORECASE,
+)
+# Slot cell may include a size restriction like "Dronebay (M/L only)".
+_SLOT_NOTE_RE = re.compile(r"\(([^)]+?)\s*only\)", re.IGNORECASE)
+
+
+def _slugify(name: str) -> str:
+    """Aspect record key — lowercase, non-alphanumerics→underscore.
+
+    Distinct from `display_name` so `has_image` (which checks key≠name) stays
+    True for every real aspect on the wiki page."""
+    s = re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_").lower()
+    return s or name
+
+
+def _parse_aspect_cell(cell: str) -> tuple[str, bool] | None:
+    """Return (display_name, is_common) from the 'Aspects' column cell, or None."""
+    m = _ASPECT_NAME_RE.search(cell)
+    if not m:
+        return None
+    color = m.group("color").strip().lower()
+    name = m.group("name").strip()
+    return name, color == "green"
+
+
+def _parse_slot_cell(cell: str) -> tuple[str | None, str | None]:
+    """Return (slot_enum, size_note) from the 'Slots' column cell."""
+    raw = re.sub(r"\s+", " ", cell).strip()
+    if not raw:
+        return None, None
+    note_m = _SLOT_NOTE_RE.search(raw)
+    size_note = note_m.group(1).strip() if note_m else None
+    bare = _SLOT_NOTE_RE.sub("", raw).strip()
+    return _TAB_SLOT.get(bare, bare), size_note
+
+
+def parse_aspects(wikitext: str) -> dict[str, dict[str, Any]]:
+    """Walk the Aspect List ``<tabber>`` and return ``{key: lua-shaped dict}``
+    suitable for `AspectRecord.from_dict`."""
+    records: dict[str, dict[str, Any]] = {}
+    for tabber_m in re.finditer(r"<tabber>([\s\S]*?)</tabber>", wikitext):
+        inner = tabber_m.group(1)
+        tab_matches = list(re.finditer(r"(?:^|\n)\|-\|([^=\n]+)=", inner))
+        for i, tm in enumerate(tab_matches):
+            tab_name = tm.group(1).strip()
+            slot_enum = _TAB_SLOT.get(tab_name)
+            if slot_enum is None:
+                continue
+            tab_start = tm.end()
+            tab_end = tab_matches[i + 1].start() if i + 1 < len(tab_matches) else len(inner)
+            for tbl_m in re.finditer(r"\{\|[^\n]*\n[\s\S]*?\n\|\}",
+                                     inner[tab_start:tab_end]):
+                rows = _split_table_rows(tbl_m.group(0))
+                if len(rows) < 2:
+                    continue
+                # Headers come back as e.g. ['', 'Aspects', 'Description', 'Slots']
+                # (leading "!" cell is empty for the image column).
+                headers = [h.strip() for h in rows[0]]
+                try:
+                    aspect_idx = headers.index("Aspects")
+                    desc_idx = headers.index("Description")
+                    slots_idx = headers.index("Slots")
+                except ValueError:
+                    continue
+                for cells in rows[1:]:
+                    if len(cells) <= max(aspect_idx, desc_idx, slots_idx):
+                        continue
+                    parsed = _parse_aspect_cell(cells[aspect_idx])
+                    if not parsed:
+                        continue
+                    name, is_common = parsed
+                    slot_value, size_note = _parse_slot_cell(cells[slots_idx])
+                    # Fall back to the tab-derived slot if the cell didn't
+                    # match a known enum (e.g. cell says "Dronebay" already).
+                    slot_value = slot_value if slot_value in _SLOT_LABEL else slot_enum
+                    records[_slugify(name)] = {
+                        "displayName": name,
+                        "slot": slot_value,
+                        "description": cells[desc_idx].strip() or None,
+                        "common": is_common,
+                        "sizeNote": size_note,
+                    }
+    return records
+
+
 def load(session) -> AspectData:
-    """Fetch and parse Module:AspectData. One network call per scraper run."""
+    """Fetch and parse [[Aspects]]. One network call per scraper run."""
     resp = session.get(
         _API_URL,
         params={
             "action": "parse",
-            "page": "Module:AspectData",
+            "page": "Aspects",
             "prop": "wikitext|revid",
             "format": "json",
             "formatversion": "2",
@@ -108,7 +194,7 @@ def load(session) -> AspectData:
     )
     resp.raise_for_status()
     parse = resp.json()["parse"]
-    raw = parse_lua(parse["wikitext"])
+    raw = parse_aspects(parse["wikitext"])
     records = {k: AspectRecord.from_dict(k, v) for k, v in raw.items()}
     return AspectData(records=records, revid=int(parse["revid"]))
 

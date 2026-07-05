@@ -1,0 +1,2193 @@
+For the listing of various ship manufacturers and points of sale for these ships, please consult [[Ship Manufacturers]]. For general information about ships, see [[Ships]].
+
+__TOC__
+
+== Column legend ==
+
+{| class="wikitable" style="margin:0;"
+! Code !! Meaning
+|-
+! colspan="2" style="text-align:left;" | Identity
+|-
+| <code>Ships</code> || Ship name and image
+|-
+| <code>Manufacturer</code> || Builder — see [[Ship Manufacturers]]
+|-
+| <code>Crew</code> || Crew officers supported
+|-
+| <code>Aux</code> || Auxiliary slot type and size, if present
+|-
+! colspan="2" style="text-align:left;" | Durability <small>(modifiers ×; blank = baseline 1.0)</small>
+|-
+| <code>Hull</code> || Hull HP modifier — see [[Stat scaling]]
+|-
+| <code>Armr</code> || Armor HP modifier — see [[Stat scaling]]
+|-
+| <code>Shld</code> || Shield HP modifier — see [[Stat scaling]]
+|-
+! colspan="2" style="text-align:left;" | Mobility
+|-
+| <code>Crgo</code> || Cargo capacity
+|-
+| <code>Spd</code> || Max warp speed <small>(ls/s)</small> — ×7 during [[Navigation#Travel speed|Fast-Lane Travel]]
+|-
+| <code>Acc</code> || Warp acceleration <small>(ls/s²)</small>
+|-
+| <code>Tonn</code> || Ship weight in tons
+|-
+! colspan="2" style="text-align:left;" | Combat
+|-
+| <code>Hrdp</code> || Hardpoint slots, size-coded (e.g. 2M 3S)
+|-
+! colspan="2" style="text-align:left;" | Requirements <small>(— = not available from a shipyard)</small>
+|-
+| <code>ShpR</code> || Shipyard reputation required
+|-
+| <code>Cnq</code> || Conquest rank required
+|-
+| <code>PlyrL</code> || Player level required
+|-
+| <code>ShpL</code> || Shipyard level required
+|}
+
+
+== Small Ships ==
+
+<tabber>
+|-|Cutters=
+"A light combat craft, usually armed with a single turret. Fast and expendable."
+
+'''Size:''' 1<br>
+'''Cutter Bonus:''' +30% Combat Power, +3% Critical Chance<br>
+'''Range Bonus:''' -<br>
+'''Note''': Ships with Player Level requirement 0! are available as starter ships.
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Raptor<br>[[File:Raptor.png|thumb|center]]
+| [[Akai Armory]]
+| 1
+| 
+| 1.9
+| 
+| 0.25
+| 60
+| 71
+| 19
+| 1S
+| 290
+| Neutral
+| —
+| 0!
+| 0+
+|-
+| Zephyr<br>[[File:Zephyr.png|thumb|center]]
+| [[Akai Armory]]
+| 1
+| 
+| 1.4
+| 
+| 1.5
+| 95
+| 87
+| 19
+| 1S
+| 290
+| Friendly
+| —
+| 12
+| 7+
+|-
+| Interceptor<br>[[File:Interceptor.png|thumb|center]]
+| [[Custos Arms]]
+| 1
+| 
+| 0.9
+| 
+| 1.1
+| 60
+| 91
+| 24
+| 1S
+| 220
+| Neutral
+| —
+| 5
+| 0+
+|-
+| Cudal<br>[[File:Cudal.png|thumb|center]]
+| [[Frontier]]
+| 1
+| 
+| 0.8
+| 
+|
+| 100
+| 62
+| 17
+| 1S
+| 340
+| Neutral
+| —
+| 3
+| 0 - 15
+|-
+| Margil<br>[[File:Margil.png|thumb|center]]
+| [[Frontier]]
+| 1
+| 
+| 3.2
+| 
+| 
+| 70
+| 71
+| 19
+| 1S
+| 260
+| Neutral
+| —
+| 1
+| 0+
+|-
+| Buzzard<br>[[File:Buzzard.png|thumb|center]]
+| [[Marade Wharf]]
+| 1
+| 
+| 0.8
+| 0.7
+| 
+| 60
+| 96
+| 24
+| 1S
+| 190
+| Cordial
+| —
+| 1
+| 0+
+|-
+| Cudal<br>[[File:Cudal.wharf.png|thumb|center]]
+| [[Marade Wharf]]
+| 1
+| 
+| 0.8
+| 
+|
+| 100
+| 62
+| 17
+| 1S
+| 340
+| Neutral
+| —
+| 3
+| 0 - 15
+|-
+| Margil<br>[[File:Margil.wharf.png|thumb|center]]
+| [[Marade Wharf]]
+| 1
+| 
+| 3.2
+| 
+| 
+| 70
+| 71
+| 19
+| 1S
+| 260
+| Neutral
+| —
+| 1
+| 0+
+|-
+| Zephyr<br>[[File:Zephyr.wharf.png|thumb|center]]
+| [[Marade Wharf]]
+| 1
+| 
+| 1.4
+| 
+| 1.5
+| 95
+| 87
+| 19
+| 1S
+| 290
+| Friendly
+| —
+| 12
+| 7+
+|-
+| Firecs<br>[[File:Firecs.png|thumb|center]]
+| [[Obrix]]
+| 1
+| 
+| 1.1
+|
+| 1.35
+| 40
+| 93
+| 11
+| 1S
+| 205
+| Friendly
+| —
+| 7
+| 2+
+|-
+| Thorne<br>[[File:Thorne.png|thumb|center]]
+| [[Obrix]]
+| 1
+| 
+| 1.1
+|
+| 1.3
+| 60
+| 88
+| 12
+| 1S
+| 220
+| Friendly
+| —
+| 5
+| 0+
+|-
+| Stilet<br>[[File:Stilet.png|thumb|center]]
+| [[RedStar Forge]]
+| 1
+| 
+|
+| 1.2
+| 
+| 70
+| 65
+| 18
+| 1S
+| 285
+| Neutral
+| —
+| 3
+| 0+
+|-
+| Stinger<br>[[File:Stinger.png|thumb|center]]
+| [[RedStar Forge]]
+| 1
+| 
+| 0.6
+| 0.5
+| 
+| 40
+| 103
+| 26
+| 1S
+| 165
+| Friendly
+| —
+| 1
+| 0+
+|-
+| Tesak<br>[[File:Tesak.png|thumb|center]]
+| [[RedStar Forge]]
+| 1
+| 
+| 1.1
+| 1.3
+| 
+| 115
+| 65
+| 18
+| 1S
+| 355
+| Neutral
+| —
+| 5
+| 0+
+|-
+| Acolyte AC-1<br>[[File:Acolyte AC-1.png|thumb|center]]
+| [[Spirit Design]]
+| 1
+| 
+|
+| 
+|
+| 70
+| 68
+| 19
+| 1S
+| 320
+| Neutral
+| —
+| 3
+| 0+
+|-
+| Votary<br>[[File:Votary.png|thumb|center]]
+| [[Spirit Design]]
+| 1
+| 
+| 0.8
+| 
+|
+| 90
+| 101
+| 23
+| 1S
+| 345
+| Neutral
+| —
+| 5
+| 0+
+|-
+| Sagitta<br>[[File:Sagitta.png|thumb|center]]
+| [[Stellar Industries]]
+| 1
+| 
+|
+| 
+| 1.1
+| 90
+| 88
+| 23
+| 1S
+| 330
+| Neutral
+| —
+| 3
+| 0+
+|-
+| Verutum<br>[[File:Verutum.png|thumb|center]]
+| [[Stellar Industries]]
+| 1
+| 
+| 1.1
+| 
+| 1.2
+| 110
+| 81
+| 19
+| 1S
+| 380
+| Neutral
+| —
+| 5
+| 0+
+|}
+
+
+|-|Gunships=
+"A small strike vessel, carrying heavier firepower than a cutter. Effective in close-range dogfights.
+
+'''Size:''' 2<br>
+'''Gunship Bonus:''' +30% Combat Power, +3% Critical Chance<br>
+'''Range Bonus:''' +20% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Shrike<br>[[File:Shrike.png|thumb|center]]
+| [[Akai Armory]]
+| 2
+| 
+| 1.2
+|
+| 1.85
+| 155
+| 67
+| 23
+| 2S
+| 585
+| Cordial
+| —
+| 13
+| 8+
+|-
+| Cruiser<br>[[File:Cruiser.png|thumb|center]]
+| [[Custos Arms]]
+| 2
+| 
+| 1.3
+| 
+| 1.6
+| 90
+| 78
+| 21
+| 2S
+| 380
+| Distinguished
+| —
+| 9
+| 4+
+|-
+| Tergal<br>[[File:Tergal.png|thumb|center]]
+| [[Frontier]]
+| 2
+| 
+| 1.5
+|
+| 1.5
+| 160
+| 56
+| 14
+| 2S
+| 650
+| Cordial
+| —
+| 8
+| 3+
+|-
+| Outrider<br>[[File:Outrider.png|thumb|center]]
+| [[Marade Wharf]]
+| 2
+| 
+| 1.2
+| 1.3
+| 
+| 110
+| 67
+| 10
+| 2S
+| 660
+| Cordial
+| —
+| 7
+| 2+
+|-
+| Shrike<br>[[File:Shrike.wharf.png|thumb|center]]
+| [[Marade Wharf]]
+| 2
+| 
+| 1.2
+|
+| 1.85
+| 155
+| 67
+| 23
+| 2S
+| 585
+| Cordial
+| —
+| 13
+| 8+
+|-
+| Tergal<br>[[File:Tergal.wharf.png|thumb|center]]
+| [[Marade Wharf]]
+| 2
+| 
+| 1.5
+|
+| 1.5
+| 160
+| 56
+| 14
+| 2S
+| 650
+| Cordial
+| —
+| 8
+| 3+
+|-
+| Oryne<br>[[File:Oryne.png|thumb|center]]
+| [[Obrix]]
+| 2
+| 
+| 1.6
+|
+| 1.65
+| 135
+| 69
+| 24
+| 2S
+| 450
+| Cordial
+| —
+| 9
+| 4+
+|-
+| Petara<br>[[File:Petara.png|thumb|center]]
+| [[Obrix]]
+| 2
+| 
+| 1.55
+|
+| 1.7
+| 120
+| 69
+| 24
+| 2S
+| 470
+| Cordial
+| —
+| 9
+| 4+
+|-
+| Berdysh<br>[[File:Berdysh.png|thumb|center]]
+| [[RedStar Forge]]
+| 2
+| 
+| 1.6
+| 1.8
+| 
+| 190
+| 59
+| 10
+| 1M
+| 810
+| Cordial
+| —
+| 8
+| 2+
+|-
+| Molot<br>[[File:Molot.png|thumb|center]]
+| [[RedStar Forge]]
+| 2
+| 
+| 1.4
+| 1.6
+| 
+| 130
+| 46
+| 12
+| 2S
+| 750
+| Cordial
+| —
+| 7
+| 2+
+|-
+| Arbiter<br>[[File:Arbiter.png|thumb|center]]
+| [[Spirit Design]]
+| 2
+| 
+| 1.4
+| 1.3
+|
+| 145
+| 99
+| 20
+| 2S
+| 620
+| Cordial
+| —
+| 8
+| 2+
+|-
+| Confessor<br>[[File:Confessor.png|thumb|center]]
+| [[Spirit Design]]
+| 2
+| 
+| 1.5
+| 1.45
+|
+| 155
+| 57
+| 16
+| 2S
+| 680
+| Cordial
+| —
+| 7
+| 2+
+|-
+| Preceptor<br>[[File:Preceptor.png|thumb|center]]
+| [[Spirit Design]]
+| 2
+| Dronebay<br>Small
+| 1.55
+| 1.6
+|
+| 140
+| 52
+| 14
+|
+| 730
+| Cordial
+| —
+| 7
+| 2+
+|-
+| Phalanx<br>[[File:Phalanx.png|thumb|center]]
+| [[Stellar Industries]]
+| 2
+| 
+| 1.5
+|
+| 1.7
+| 170
+| 54
+| 14
+| 1M
+| 650
+| Cordial
+| —
+| 7
+| 2+
+|-
+| Triarius<br>[[File:Triarius.png|thumb|center]]
+| [[Stellar Industries]]
+| 2
+| 
+| 2
+|
+| 1.8
+| 195
+| 60
+| 13
+| 2S
+| 750
+| Cordial
+| —
+| 8
+| 2+
+|}
+
+
+|-|Mining Skiffs=
+"A compact mining ship, specialized for quick resource gathering in asteroid fields."
+
+'''Size:''' 1<br>
+'''Skiff Bonus:''' +30% Mining Power, +20% Resource Yield<br>
+'''Range Bonus: -'''<br>
+'''Note''': Ships with Player Level requirement 0! are available as starter ships.
+
+{| class="sortable fandom-table"
+|-
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Garnil<br>[[File:Garnil.png|thumb|center]] || [[Frontier]] || 1 ||  || 2.05 ||  ||  || 190 || 54 || 18 || 1S || 410 || Neutral || — || 0! || 0 - 15
+|-
+| Rockhound<br>[[File:Rockhound.png|thumb|center]] || [[Marade Wharf]] || 1 ||  || 2.6 || || || 140 || 50 || 10 || 1S || 360 || Neutral || — || 1 || 0+
+|-
+| Chisel Mk I<br>[[File:Chisel Mk I.png|thumb|center]] || [[Mindus Manufacturing]] || 1 ||  || 2.0 ||  ||  || 180 || 62 || 18 || 1S || 380 || Neutral || — || 0! || 0 - 15
+|-
+| Chisel Mk II<br>[[File:Chisel Mk II.png|thumb|center]] || [[Mindus Manufacturing]] || 1 || || 2.2 || 0.5 || || 290 || 52 || 16 || 1S || 550 || Neutral || — || 2 || 0+
+|-
+| Bur<br>[[File:Bur.png|thumb|center]] || [[RedStar Forge]] || 1 || || 1.2 || 0.6 || || 325 || 39 || 10 || 1S || 390 || Neutral || — ||  4 || 0+
+|-
+| Veinseeker<br>[[File:Veinseeker.png|thumb|center]] || [[Spirit Design]] || 1 || || 1.2 || || 0.5 || 290 || 78 || 17 || 1S || 390 || Neutral || — || 4 || 0+
+|-
+| Dolabra<br>[[File:dolabra.png|thumb|center]] || [[Stellar Industries]] || 1 || || 1.2 || || 0.7 || 310 || 51 || 12 || 1S || 480 || Neutral || — || 4 || 0+
+|-
+| Bore<br>[[File:Bore.png|thumb|center]] || [[Utixon Corp]] || 1 || || 2.4 || || || 290 || 42 || 9 || 1S || 440 || Neutral || — || 2 || 0+
+|}
+
+|-|Hewers=
+"Not as vulnerable as Skiffs, Hewer sized mining ships open up more possibilities for gathering ores."
+
+'''Size:''' 2<br>
+'''Hewer Bonus:''' +30% Mining Power, +20% Resource Yield<br>
+'''Range Bonus:''' +10% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Gale<br>[[File:Gale.png|thumb|center]]
+| [[Akai Armory]]
+| 2
+| 
+| 1.8
+| 
+| 1.8
+| 320
+| 62
+| 34
+| 1M
+| 620
+| Cordial
+| —
+| 11
+| 0+
+|-
+| Pillager<br>[[File:Pillager.png|thumb|center]]
+| [[Marade Wharf]]
+| 2
+| 
+| 2
+| 1.2
+| 
+| 280
+| 50
+| 10
+| 2S
+| 570
+| Neutral
+| —
+| 7
+| 2+
+|-
+| Foreman DC-2<br>[[File:Foreman DC-2.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 2
+| Dronebay<br>Small
+| 2.3
+| 0.8
+|
+| 460
+| 50
+| 10
+|
+| 900
+| Cordial
+| —
+| 7
+| 2+
+|-
+| Pickaxe<br>[[File:Pickaxe.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 2
+| 
+| 2.3
+| 0.6
+| 
+| 370
+| 40
+| 13
+| 2S
+| 690
+| Cordial
+| —
+| 7
+| 0+
+|-
+| Eradon<br>[[File:Eradon.png|thumb|center]]
+| [[Obrix]]
+| 2
+| 
+| 1.65
+|
+| 1.4
+| 310
+| 56
+| 11
+| 2S
+| 490
+| Cordial
+| —
+| 9
+| 4+
+|-
+| Kailov<br>[[File:Kailov.png|thumb|center]]
+| [[RedStar Forge]]
+| 2
+| 
+| 2
+|
+| 
+| 420
+| 38
+| 11
+| 1M
+| 710
+| Cordial
+| —
+| 8
+| 0+
+|-
+| Devotee<br>[[File:Devotee.png|thumb|center]]
+| [[Spirit Design]]
+| 2
+| 
+| 2
+| 
+| 0.7
+| 390
+| 67
+| 15
+| 2S
+| 770
+| Cordial
+| —
+| 8
+| 0+
+|-
+| Carbo<br>[[File:Carbo.png|thumb|center]]
+| [[Stellar Industries]]
+| 2
+| 
+| 2
+| 
+| 0.9
+| 500
+| 48
+| 16
+| 2S
+| 1240
+| Cordial
+| —
+| 8
+| 6+
+|}
+
+
+|-|Salvage Skiffs=
+"A small nimble salvage ship, darting through debris fields stripping whatever it can carry before moving on."
+
+'''Size:''' 1<br>
+'''Skiff Bonus:''' +30% Salvage Power, +20% Resource Yield<br>
+'''Range Bonus:''' -<br>
+'''Note''': Ships with Player Level requirement 0! are available as starter ships.
+
+{| class="sortable fandom-table"
+|-
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Squall<br>[[File:Squall.png|thumb|center]] || [[Akai Armory]] || 1 || || 1.2 || || 1.4 || 140 || 84 || 23 || 1S || 340 || Neutral || — || 4 || 0 - 15
+|-
+| Chisel Mk I SN<br>[[File:Chisel Mk I SN.png|thumb|center]] || [[Mindus Manufacturing]] || 1 || || 1.7 || || || 220 || 58 || 18 || 1S || 395 || Neutral || — || 0! || 0 - 15
+|-
+| Skrap<br>[[File:Skrap.png|thumb|center]] || [[RedStar Forge]] || 1 || || 1.1 || 1.2 || || 210 || 54 || 10 || 1S || 510 || Neutral || — || 4 || 0 - 25
+|-
+| Reliqua<br>[[File:Reliqua.png|thumb|center]] || [[Spirit Design]] || 1 || || 1.1 || || 0.5 || 200 || 71 || 19 || 1S || 500 || Neutral || — || 4 || 0 - 25
+|-
+| Lacinia<br>[[File:Lacinia.png|thumb|center]] || [[Stellar Industries]] || 1 || || 1.2 || || 0.6 || 230 || 61 || 17 || 1S || 530 || Neutral || — || 4 || 0 - 25
+|-
+| Tugbit<br>[[File:Tugbit.png|thumb|center]] || [[Utixon Corp]] || 1 || || 1.8 || || || 210 || 54 || 16 || 1S || 410 || Neutral || — || 0! || 0 - 15
+|}
+
+|-|Scows=
+"A step up from the salvage Skiff, the Scow is a workhorse salvager built to haul junk rather than look good doing it."
+
+'''Size:''' 2<br>
+'''Scow Bonus:''' +30% Salvage Power, +20% Resource Yield<br>
+'''Range Bonus:''' +10% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Kite<br>[[File:Kite.png|thumb|center]]
+| [[Akai Armory]]
+| 2
+| 
+| 1.8
+| 
+| 1.8
+| 320
+| 62
+| 34
+| 1M
+| 620
+| Cordial
+| —
+| 11
+| 0+
+|-
+| Otrub<br>[[File:Otrub.png|thumb|center]]
+| [[RedStar Forge]]
+| 2
+| 
+| 1.3
+| 1.1
+| 
+| 340
+| 45
+| 12
+| 2S
+| 780
+| Friendly
+| —
+| 6
+| 0+
+|-
+| Remnant<br>[[File:Remnant.png|thumb|center]]
+| [[Spirit Design]]
+| 2
+| Dronebay Small
+| 1.2
+| 
+| 1.4
+| 200
+| 59
+| 13
+| 1S
+| 825
+| Friendly
+| —
+| 7
+| 0+
+|-
+| Rekkem<br>[[File:Rekkem.png|thumb|center]]
+| [[Utixon Corp]]
+| 2
+| 
+| 2.1
+|
+|
+| 320
+| 50
+| 15
+| 2S
+| 390
+| Cordial
+| —
+| 6
+| 0 - 20
+|}
+
+
+|-|Couriers=
+"The fast Courier cargo ship is built for speed over capacity, ideal for delivering high value cargo across sectors."
+
+'''Size:''' 1<br>
+'''Courier Bonus:''' -<br>
+'''Range Bonus:''' -
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Vesper<br>[[File:Vesper.png|thumb|center]]
+| [[Spirit Design]]
+| 1
+| 
+| 1.3
+| 
+| 
+| 560
+| 96
+| 30
+| 1S
+| 620
+| Neutral
+| —
+| 9
+| 0+
+|-
+| Oxlo Mk I<br>[[File:Oxlo Mk I.png|thumb|center]]
+| [[Utixon Corp]]
+| 1
+| 
+| 2
+| 0.4
+| 
+| 880
+| 48
+| 11
+| 1S
+| 750
+| Neutral
+| —
+| 6
+| 0+
+|}
+
+
+|-|Ferries=
+"A modest transport vessel ferrying goods and supplies between stations, the backbone of trade."
+
+'''Size:''' 2<br>
+'''Ferry Bonus:''' -<br>
+'''Range Bonus:''' -
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Vagon<br>[[File:Vagon.png|thumb|center]]
+| [[RedStar Forge]]
+| 2
+| 
+| 2
+| 1.9
+| 
+| 1240
+| 39
+| 12
+| 1S
+| 1210
+| Cordial
+| —
+| 9
+| 4+
+|-
+| Vectura<br>[[File:Vectura.png|thumb|center]]
+| [[Stellar Industries]]
+| 2
+| 
+| 2.2
+| 
+| 1.3
+| 1100
+| 44
+| 13
+| 2S
+| 1430
+| Cordial
+| —
+| 9
+| 4+
+|}
+
+
+</tabber>
+
+== Medium Ships ==
+
+<tabber>
+|-|Corvettes=
+"Corvettes bridge the gap between gunships and frigates, combining agility with enough firepower to threaten larger ships."
+
+'''Size:''' 3<br>
+'''Corvette Bonus:''' +30% Combat Power, +3% Critical Chance<br>
+'''Range Bonus:''' +40% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Cyclone<br>[[File:Cyclone.png|thumb|center]]
+| [[Akai Armory]]
+| 3
+| 
+| 4
+| 
+| 4
+| 460
+| 65
+| 9
+| 1M 2S
+| 1250
+| Friendly
+| —
+| 21
+| 16+
+|-
+| Siren<br>[[File:Siren.png|thumb|center]]
+| [[Custos Arms]]
+| 3
+| 
+| 5
+| 
+| 5
+| 380
+| 65
+| 17
+| 2M
+| 1150
+| Respected
+| —
+| 22
+| 17+
+|-
+| Siren Overseer<br>[[File:Siren Overseer.png|thumb|center]]
+| [[Custos Arms]]
+| 3
+| Dronebay Medium
+| 4.5
+| 
+| 4.5
+| 310
+| 59
+| 16
+| 1M
+| 1380
+| Respected
+| —
+| 24
+| 19+
+|-
+| Sarnil<br>[[File:Sarnil.png|thumb|center]]
+| [[Frontier]]
+| 3
+| 
+| 2.5
+| 
+| 2.5
+| 310
+| 53
+| 12
+| 1M 2S
+| 1560
+| Friendly
+| —
+| 17
+| 12+
+|-
+| Blood Dredger<br>[[File:Blood Dredger.png|thumb|center]]
+| [[Marade Wharf]]
+| 3
+| 
+| 2.5
+| 2.5
+| 
+| 490
+| 50
+| 10
+| 1M 1S
+| 1300
+| Respected
+| —
+| 12
+| 7+
+|-
+| Sarnil<br>[[File:Sarnil.wharf.png|thumb|center]]
+| [[Marade Wharf]]
+| 3
+| 
+| 2.5
+| 
+| 2.5
+| 310
+| 53
+| 12
+| 1M 2S
+| 1560
+| Friendly
+| —
+| 17
+| 12+
+|-
+| Syladon<br>[[File:Syladon.png|thumb|center]]
+| [[Obrix]]
+| 3
+| 
+| 4.6
+| 
+| 4.5
+| 400
+| 62
+| 17
+| 2M
+| 1250
+| Respected
+| —
+| 22
+| 17+
+|-
+| Kamin<br>[[File:Kamin.png|thumb|center]]
+| [[RedStar Forge]]
+| 3
+| 
+| 4
+| 4
+| 
+| 410
+| 52
+| 15
+| 1M 1S
+| 1340
+| Friendly
+| —
+| 13
+| 8+
+|-
+| Exemplar<br>[[File:Exemplar.png|thumb|center]]
+| [[Spirit Design]]
+| 3
+| Dronebay Medium
+| 3.1
+| 
+| 3.6
+| 520
+| 59
+| 11
+| 1S
+| 1340
+| Friendly
+| —
+| 21
+| 16+
+|-
+| Fanatic<br>[[File:Fanatic.png|thumb|center]]
+| [[Spirit Design]]
+| 3
+| 
+| 3.2
+| 
+| 3.2
+| 650
+| 40
+| 15
+| 1M 2S
+| 1250
+| Friendly
+| —
+| 14
+| 9+
+|-
+| Maniple<br>[[File:Maniple.png|thumb|center]]
+| [[Stellar Industries]]
+| 3
+| 
+| 3.2
+| 
+| 3.5
+| 600
+| 38
+| 16
+| 4S
+| 1360
+| Friendly
+| —
+| 17
+| 12+
+|-
+| Tribune<br>[[File:Tribune.png|thumb|center]]
+| [[Stellar Industries]]
+| 3
+| Dronebay Small
+| 3.1
+| 
+| 3.5
+| 580
+| 42
+| 18
+| 2S
+| 1490
+| Respected
+| —
+| 21
+| 16+
+|}
+
+
+|-|Frigates=
+"A durable frontline warship, Frigates form the backbone of many fleets, balancing offense and defense."
+
+'''Size:''' 4<br>
+'''Corvette Bonus:''' +30% Combat Power, +3% Critical Chance<br>
+'''Range Bonus:''' +70% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Tempest<br>[[File:Tempest.png|thumb|center]]
+| [[Akai Armory]]
+| 4
+| Dronebay Small
+| 7.3
+| 
+| 8.1
+| 590
+| 79
+| 7
+| 2M 1S
+| 2550
+| Respected
+| —
+| 29
+| 12+
+|-
+| Enforcer<br>[[File:Enforcer.png|thumb|center]]
+| [[Custos Arms]]
+| 4
+| Dronebay Medium
+| 6.6
+| 
+| 8.2
+| 560
+| 110
+| 20
+| 2M 1S
+| 2700
+| Exalted
+| —
+| 38
+| 32+
+|-
+| Brimstone<br>[[File:Brimstone.png|thumb|center]]
+| [[Marade Wharf]]
+| 4
+| 
+| 7.1
+| 
+| 6.9
+| 840
+| 62
+| 9
+| 1M 4S
+| 2800
+| Respected
+| —
+| 29
+| 24+
+|-
+| Ramose<br>[[File:Ramose.png|thumb|center]]
+| [[Obrix]]
+| 4
+| 
+| 5.8
+| 
+| 8.4
+| 710
+| 81
+| 11
+| 3M 1S
+| 2410
+| Respected
+| —
+| 35
+| 32+
+|-
+| Grom<br>[[File:Grom.png|thumb|center]]
+| [[RedStar Forge]]
+| 4
+| 
+| 5.3
+| 8.7
+| 
+| 620
+| 78
+| 6
+| 2M 2S
+| 2480
+| Respected
+| —
+| 29
+| 24+
+|-
+| Penance<br>[[File:Penance.png|thumb|center]]
+| [[Spirit Design]]
+| 4
+| 
+| 6.8
+| 
+| 6.9
+| 960
+| 73
+| 6
+| 3M
+| 2800
+| Respected
+| —
+| 29
+| 24+
+|-
+| Redeemer<br>[[File:Redeemer.png|thumb|center]]
+| [[Spirit Design]]
+| 4
+| Dronebay Medium
+| 6.4
+| 
+| 5.1
+| 860
+| 70
+| 7
+| 1M 2S
+| 2625
+| Respected
+| —
+| 29
+| 22+
+|-
+| Centurion<br>[[File:Centurion.png|thumb|center]]
+| [[Stellar Industries]]
+| 4
+| 
+| 6.4
+| 
+| 7.8
+| 840
+| 70
+| 6
+| 3M
+| 2750
+| Respected
+| —
+| 29
+| 24+
+|}
+
+
+|-|Dredgers=
+"More capable than Hewers but still relatively nimble, the Dredger is built for extended operations far from the safety of a station."
+
+'''Size:''' 3<br>
+'''Dredger Bonus:''' +30% Mining Power, +20% Resource Yield<br>
+'''Range Bonus:''' +20% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Delvir<br>[[File:Delvir.png|thumb|center]]
+| [[Frontier]]
+| 3
+| 
+| 3.8
+| 0.6
+| 
+| 780
+| 50
+| 10
+| 3S
+| 2150
+| Friendly
+| —
+| 12
+| 7+
+|-
+| Auger ERC-2<br>[[File:Auger ERC-2.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 3
+| 
+| 3.2
+| 1.4
+| 
+| 880
+| 50
+| 10
+| 1M 1S
+| 1950
+| Friendly
+| —
+| 11
+| 6+
+|-
+| Auger ERC-7<br>[[File:Auger ERC-7.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 4
+| 
+| 2.8
+| 
+| 2
+| 700
+| 50
+| 10
+| 1M 2S
+| 1875
+| Respected
+| —
+| 19
+| 14+
+|-
+| Rudnik<br>[[File:Rudnik.png|thumb|center]]
+| [[RedStar Forge]]
+| 3
+| Dronebay Small
+| 3.4
+| 2
+| 
+| 870
+| 65
+| 12
+| 2S
+| 2680
+| Friendly
+| —
+| 13
+| 8+
+|-
+| Anotan<br>[[File:Anotan.png|thumb|center]]
+| [[Spirit Design]]
+| 3
+| Dronebay Medium
+| 2.9
+| 
+| 1.6
+| 720
+| 70
+| 15
+| 2S
+| 2800
+| Friendly
+| —
+| 13
+| 8+
+|-
+| Terebra<br>[[File:Terebra.png|thumb|center]]
+| [[Stellar Industries]]
+| 3
+| 
+| 2.9
+| 
+| 2
+| 920
+| 60
+| 11
+| 3S
+| 2130
+| Friendly
+| —
+| 13
+| 8+
+|-
+| Moxe<br>[[File:Moxe.png|thumb|center]]
+| [[Utixon Corp]]
+| 2
+| Dronebay Medium
+| 2.9
+| 0.6
+| 
+| 740
+| 50
+| 10
+| 1S
+| 2620
+| Friendly
+| —
+| 13
+| 8+
+|}
+
+
+|-|Breakers=
+"A mid-sized spaceship built to fracture large asteroid bodies, a notable step-up from Dredgers."
+
+'''Size:''' 4<br>
+'''Dredger Bonus:''' +30% Mining Power, +20% Resource Yield<br>
+'''Range Bonus:''' +30% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Warden DSF-3<br>[[File:Warden DSF-3.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 4
+| Dronebay Medium
+| 5.2
+| 
+| 3.2
+| 1220
+| 77
+| 7
+| 1M 2S
+| 2350
+| Respected
+| —
+| 30
+| 22+
+|-
+| Ferrum<br>[[File:Ferrum.png|thumb|center]]
+| [[Stellar Industries]]
+| 4
+| 
+| 4.6
+| 
+| 2.6
+| 1100
+| 96
+| 9
+| 2M 3S
+| 1900
+| Respected
+| —
+| 30
+| 25+
+|}
+
+
+|-|Scrappers=
+"A dedicated scrapping ship equipped to dismantle wrecks with greater ease than the smaller Scow type salvagers."
+
+'''Size:''' 3<br>
+'''Scrapper Bonus:''' +30% Salvage Power, +20% Resource Yield<br>
+'''Range Bonus:''' +20% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Osprey<br>[[File:Osprey.png|thumb|center]]
+| [[Akai Armory]]
+| 3
+| 
+| 2.6
+| 1.3
+| 4
+| 590
+| 56
+| 12
+| 1M 2S
+| 1360
+| Friendly
+| —
+| 22
+| 17+
+|-
+| Bero<br>[[File:Bero.png|thumb|center]]
+| [[Frontier]]
+| 3
+| 
+| 2.2
+| 0.8
+| 
+| 530
+| 41
+| 15
+| 1M 1S
+| 1430
+| Friendly
+| —
+| 12
+| 7 - 50
+|-
+| Lom<br>[[File:Lom.png|thumb|center]]
+| [[RedStar Forge]]
+| 3
+| Dronebay Small
+| 3
+| 1.8
+| 
+| 660
+| 49
+| 12
+| 1M 1S
+| 1820
+| Friendly
+| —
+| 20
+| 15+
+|-
+| Elytra<br>[[File:Elytra.png|thumb|center]]
+| [[Spirit Design]]
+| 3
+| Dronebay Medium
+| 2.8
+| 
+| 1.2
+| 425
+| 62
+| 16
+| 1S
+| 1820
+| Friendly
+| —
+| 19
+| 14+
+|-
+| Rasura<br>[[File:Rasura.png|thumb|center]]
+| [[Stellar Industries]]
+| 4
+| 
+| 3
+| 
+| 1.2
+| 650
+| 45
+| 15
+| 1M 1S
+| 1610
+| Friendly
+| —
+| 14
+| 9+
+|-
+| Exdyne<br>[[File:Exdyne.png|thumb|center]]
+| [[Utixon Corp]]
+| 4
+| Dronebay Medium
+| 3.4
+| 1.2
+| 
+| 590
+| 58
+| 5
+| 2S
+| 1820
+| Respected
+| —
+| 24
+| 19+
+|-
+| Fultor<br>[[File:Fultor.png|thumb|center]]
+| [[Utixon Corp]]
+| 4
+| 
+| 3.8
+| 1.2
+| 
+| 880
+| 26
+| 6
+| 1M 2S
+| 2320
+| Respected
+| —
+| 19
+| 14+
+|}
+
+
+|-|Wreckers=
+"A heavy salvage ship built to tear apart wrecks, creating raw materials in no time and with it a fat paycheck."
+
+'''Size:''' 4<br>
+'''Scrapper Bonus:''' +30% Salvage Power, +20% Resource Yield<br>
+'''Range Bonus:''' +30% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Kuvald<br>[[File:kuvald.png|thumb|center]]
+| [[RedStar Forge]]
+| 4
+| 
+| 4
+| 6
+| 
+| 1050
+| 79
+| 32
+| 3M 1S
+| 2026
+| Respected
+| —
+| 28
+| 23+
+|-
+| Sanctifier<br>[[File:Sanctifier.png|thumb|center]]
+| [[Spirit Design]]
+| 4
+| Dronebay Medium
+| 5
+| 
+| 3.1
+| 720
+| 98
+| 30
+| 2M
+| 2580
+| Respected
+| —
+| 28
+| 23+
+|-
+| Scoria<br>[[File:Scoria.png|thumb|center]]
+| [[Stellar Industries]]
+| 4
+| 
+| 4.6
+| 
+| 2.6
+| 1150
+| 92
+| 21
+| 2M 2S
+| 1850
+| Respected
+| —
+| 29
+| 24+
+|}
+
+
+|-|Haulers=
+"The Hauler is capable of carrying significant cargo loads across larger routes, and more capable of protecting itself."
+
+'''Size:''' 3<br>
+'''Hauler Bonus:''' -<br>
+'''Range Bonus:''' +20% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Cormel<br>[[File:Cormel.png|thumb|center]]
+| [[Frontier]]
+| 2
+| 
+| 2.1
+| 0.6
+| 
+| 1470
+| 39
+| 13
+| 1S
+| 1890
+| Cordial
+| —
+| 10
+| 5 - 50
+|-
+| Bremya<br>[[File:Bremya.png|thumb|center]]
+| [[RedStar Forge]]
+| 3
+| 
+| 3
+| 4.5
+| 
+| 2500
+| 42
+| 30
+| 2S
+| 2600
+| Friendly
+| —
+| 12
+| 7+
+|-
+| Compline<br>[[File:Compline.png|thumb|center]]
+| [[Spirit Design]]
+| 3
+| 
+| 2.2
+| 
+| 1.1
+| 900
+| 112
+| 20
+| 1S
+| 1680
+| Friendly
+| —
+| 15
+| 10+
+|-
+| Oxlo Mk II<br>[[File:Oxlo Mk II.png|thumb|center]]
+| [[Utixon Corp]]
+| 2
+| 
+| 2.4
+| 0.7
+| 
+| 1920
+| 32
+| 9
+| 1S
+| 2320
+| Friendly
+| —
+| 14
+| 9 - 30
+|}
+
+
+|-|Freighters=
+"A dedicated vessel built for bulk cargo runs, the Freighter trades speed for capacity on the major trade lanes between systems."
+
+'''Size:''' 4<br>
+'''Hauler Bonus:''' -<br>
+'''Range Bonus:''' +30% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Trundar<br>[[File:Trundar.png|thumb|center]]
+| [[Utixon Corp]]
+| 3
+| 
+| 7.8
+| 1.6
+| 
+| 3600
+| 16
+| 5
+| 2S
+| 2950
+| Respected
+| —
+| 26
+| 21 - 80
+|}
+
+
+</tabber>
+
+== Large Ships ==
+
+<tabber>
+|-|Destroyers=
+"A heavily-armed warship focused on offensive capabilities, often used for patrol and assault missions."
+
+'''Size:''' 5<br>
+'''Destroyer Bonus:''' +30% Combat Power, +3% Critical Chance<br>
+'''Range Bonus:''' +100% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Hurricane<br>[[File:Hurricane.png|thumb|center]]
+| [[Akai Armory]]
+| 5
+| 
+| 11.4
+| 
+| 12.3
+| 1080
+| 115
+| 14
+| 1L 2M 2S
+| 4420
+| Respected
+| —
+| 45
+| 40+
+|-
+| Typhoon<br>[[File:Typhoon.png|thumb|center]]
+| [[Akai Armory]]
+| 5
+| Dronebay Large
+| 11.8
+| 
+| 10.5
+| 990
+| 111
+| 12
+| 1M 3S
+| 4620
+| Respected
+| —
+| 53
+| 40+
+|-
+| Eclipse<br>[[File:Eclipse.png|thumb|center]]
+| [[Kharon Forgeworks]]
+| 5
+| Dronebay Small
+| 8.1
+| 
+| 8.9
+| 1060
+| 128
+| 22
+| 1L 3M
+| 4020
+| —
+| —
+| —
+| —
+|-
+| Rypper<br>[[File:Rypper.png|thumb|center]]
+| [[Marade Wharf]]
+| 5
+| Dronebay Large
+| 12
+| 10
+| 
+| 1230
+| 106
+| 6
+| 1L 2S
+| 4520
+| Distinguished
+| Cutthroat
+| 52
+| 40+
+|-
+| Terravex<br>[[File:Terravex.png|thumb|center]]
+| [[Obrix]]
+| 5
+| 
+| 7.5
+| 
+| 11.4
+| 1100
+| 122
+| 16
+| 2L 2M
+| 4120
+| —
+| —
+| —
+| —
+|-
+| Varyag<br>[[File:Varyag.png|thumb|center]]
+| [[RedStar Forge]]
+| 5
+| Torpedoes Medium
+| 9.4
+| 12.3
+| 
+| 990
+| 115
+| 5
+| 2M 3S
+| 3800
+| Respected
+| Comrade
+| 45
+| 40+
+|-
+| Varyag-R<br>[[File:Varyag-R.png|thumb|center]]
+| [[RedStar Forge]]
+| 5
+| Dronebay Medium
+| 9
+| 11.2
+| 
+| 950
+| 109
+| 6
+| 1L 2M
+| 4020
+| Respected
+| Comrade
+| 45
+| 40+
+|-
+| Inquisitor<br>[[File:Inquisitor.png|thumb|center]]
+| [[Spirit Design]]
+| 5
+| Dronebay Medium
+| 11.8
+| 
+| 10.3
+| 970
+| 120
+| 5
+| 1L 1M 2S
+| 4100
+| Respected
+| Initiate
+| 45
+| 40+
+|-
+| Sparta<br>[[File:Sparta.png|thumb|center]]
+| [[Stellar Industries]]
+| 5
+| Torpedoes Medium
+| 13.2
+| 
+| 11.9
+| 1090
+| 110
+| 5
+| 2L 2S
+| 4620
+| Respected
+| Associate
+| 45
+| 40+
+|}
+
+
+|-|Harvesters=
+"The ore Harvester is capable of deep asteroid field operations, its larger cargo capacity increases profit greatly."
+
+'''Size:''' 5<br>
+'''Harvester Bonus:''' +30% Mining Power, +20% Resource Yield<br>
+'''Range Bonus:''' +40% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Maul<br>[[File:Maul.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 5
+| Dronebay Large
+| 6.8
+| 4.3
+| 
+| 1680
+| 89
+| 5
+| 1L 2S
+| 4230
+| Respected
+| Pickaxe Wielder
+| 47
+| 40+
+|-
+| Sledge<br>[[File:Sledge.png|thumb|center]]
+| [[Mindus Manufacturing]]
+| 5
+| 
+| 7.2
+| 
+| 5.1
+| 1890
+| 94
+| 5
+| 2L 2M
+| 3910
+| Respected
+| Pickaxe Wielder
+| 43
+| 40+
+|}
+
+
+|-|Reclaimers=
+"The Reclaimer is a capable mid-range salvager able to operate in contested debris fields for extended periods."
+
+'''Size:''' 5<br>
+'''Reclaimer Bonus:''' +30% Salvage Power, +20% Resource Yield<br>
+'''Range Bonus:''' +40% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Axcetor<br>[[File:Axcetor.png|thumb|center]]
+| [[Utixon Corp]]
+| 5
+| 
+| 5.8
+| 5.5
+| 
+| 1830
+| 103
+| 7
+| 1L 2M 2S
+| 4400
+| Respected
+| Wreckhand
+| 43
+| 40+
+|-
+| Gryp<br>[[File:Gryp.png|thumb|center]]
+| [[Utixon Corp]]
+| 5
+| Dronebay Large
+| 6
+| 5
+| 
+| 1640
+| 101
+| 6
+| 1L 2S
+| 4400
+| Respected
+| Wreckhand
+| 47
+| 40+
+|}
+
+
+|-|Carracks=
+"A heavy trading vessel of considerable size and range, Carrack sized cargo ships are self sufficient ships capable of operating independently."
+
+'''Size:''' 5<br>
+'''Carrack Bonus:''' -<br>
+'''Range Bonus:''' +40% Weapon Range
+
+
+{| class="sortable fandom-table"
+! Ships !! Manufacturer !! Crew !! Aux !! Hull !! Armr !! Shld !! Crgo !! Spd !! Acc !! Hrdp !! Tonn !! ShpR !! Cnq !! PlyrL !! ShpL
+|-
+| Paktar<br>[[File:Paktar.png|thumb|center]]
+| [[Marade Wharf]]
+| 5
+| Dronebay Medium
+| 9.1
+| 7.9
+| 
+| 3200
+| 71
+| 7
+| 4M
+| 4900
+| Respected
+| Cutthroat
+| 42
+| 40+
+|-
+| Drometar<br>[[File:Drometar.png|thumb|center]]
+| [[Utixon Corp]]
+| 5
+| Dronebay Medium
+| 9.1
+| 4.2
+| 
+| 6210
+| 23
+| 4
+| 2M
+| 6200
+| Distinguished
+| —
+| 43
+| 38+
+|}
+
+
+</tabber>
+[[Category:Lists]]

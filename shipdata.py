@@ -1,7 +1,12 @@
-"""Module:ShipData accessor for the wiki scraper.
+"""Ship List page accessor for the wiki scraper.
 
-Fetches the wiki's Lua data module, parses it into Python dicts, exposes a
-typed `ShipRecord` per ship, and builds natural-language Spec card text.
+Fetches the wiki's [[Ship List]] content page, parses the <tabber>+wikitable
+structure into Python dicts, exposes a typed `ShipRecord` per ship, and builds
+natural-language Spec card text.
+
+Replaces the previous Module:ShipData Lua-source pipeline — the Lua modules
+were removed from the wiki and the canonical ship data now lives in the
+Ship List page's tables directly.
 """
 from __future__ import annotations
 
@@ -10,68 +15,203 @@ from dataclasses import dataclass
 from typing import Any
 
 
-# The wiki's Module:ShipData uses a stable emit format from
-# `dataexport/tools/merge_shipdata.py`:
-#   ["<Key>"] = { name = value, ... },
-# so a regex parser over that exact shape is sufficient and avoids pulling in
-# a full Lua interpreter.
-_ENTRY_RE = re.compile(r'\[\s*"([^"]+)"\s*\]\s*=\s*\{', re.S)
-_FIELD_RE = re.compile(
-    r'^(\s*)(\w+)\s*=\s*(.*?),\s*(?:--[^\n]*)?$',
-    re.M,
-)
+# Hull-class plural (tab name) → singular form used by ShipRecord.ship_class
+# and the existing _CLASS_ROLE map further down. Mirrors the wiki's tabber
+# headers under each H2 size bucket.
+_CLASS_SINGULAR = {
+    "Cutters": "Cutter",
+    "Gunships": "Gunship",
+    "Mining Skiffs": "Mining Skiff",
+    "Hewers": "Hewer",
+    "Salvage Skiffs": "Salvage Skiff",
+    "Scows": "Scow",
+    "Couriers": "Courier",
+    "Ferries": "Ferry",
+    "Corvettes": "Corvette",
+    "Frigates": "Frigate",
+    "Dredgers": "Dredger",
+    "Breakers": "Breaker",
+    "Scrappers": "Scrapper",
+    "Wreckers": "Wrecker",
+    "Haulers": "Hauler",
+    "Freighters": "Freighter",
+    "Destroyers": "Destroyer",
+    "Harvesters": "Harvester",
+    "Reclaimers": "Reclaimer",
+    "Carracks": "Carrack",
+}
+
+# Ship List "Hrdp" column codes — table cells read like "2M 3S" or "1L 2S"
+# while ShipRecord/_format_hardpoints expects an expanded list ["M","M","S","S","S"].
+_HARDPOINT_RE = re.compile(r"(\d+)\s*([LMST])")
+
+# Cell pre-clean: strip [[File:...]] image markup and trailing <br>... noise
+# that ride along with the ship-name cell. Manufacturer cells are bare wikilinks
+# (`[[Akai Armory]]`) so a separate regex handles those.
+_FILE_LINK_RE = re.compile(r"\[\[File:[^\]]+\]\]", re.IGNORECASE)
+_BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
+_PLAIN_LINK_RE = re.compile(r"\[\[([^\|\]]+?)(?:\|[^\]]+)?\]\]")
 
 
-def _coerce(value_text: str) -> Any:
-    v = value_text.strip()
-    if v == "nil":
+def _clean_cell(text: str) -> str:
+    """Strip image markup, <br> tags, and wikilink decoration from a table cell."""
+    s = _FILE_LINK_RE.sub("", text)
+    s = _BR_RE.sub(" ", s)
+    s = _PLAIN_LINK_RE.sub(r"\1", s)
+    # squash inner whitespace, drop trailing comment-style remnants
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def _parse_number(text: str) -> Any:
+    """Coerce a table cell to int/float, return None for blank/dash markers."""
+    s = text.strip()
+    if not s or s in {"—", "-"}:
         return None
-    if v == "true":
-        return True
-    if v == "false":
-        return False
-    if v.startswith('"') and v.endswith('"'):
-        return v[1:-1].replace('\\"', '"').replace('\\\\', '\\')
-    if v.startswith("{") and v.endswith("}"):
-        inner = v[1:-1].strip()
-        if not inner:
-            return []
-        # Hardpoints / similar are arrays of strings; sizeSummary is k=v but
-        # the scraper doesn't surface it in the spec card so leave it as-is.
-        items = [s.strip() for s in inner.split(",") if s.strip()]
-        out = []
-        for item in items:
-            if "=" in item:
-                # k=v table — return the original text; spec_sentences ignores it.
-                return v
-            out.append(_coerce(item))
-        return out
+    # "0!" — starter-ship marker on PlyrL — strip the trailing bang.
+    if s.endswith("!"):
+        s = s[:-1].strip()
     try:
-        if "." in v:
-            return float(v)
-        return int(v)
+        if "." in s:
+            return float(s)
+        return int(s)
     except ValueError:
-        return v  # fallback: keep raw text
+        return None
 
 
-def parse_lua(text: str) -> dict[str, dict[str, Any]]:
-    """Parse a Module:ShipData Lua source into {key: {field: value}}."""
+def _parse_hardpoints(text: str) -> list[str] | None:
+    """'2M 3S' → ['M','M','S','S','S']. Blank → None."""
+    s = text.strip()
+    if not s or s in {"—", "-"}:
+        return None
+    out: list[str] = []
+    for n, code in _HARDPOINT_RE.findall(s):
+        out.extend([code] * int(n))
+    return out or None
+
+
+# Column header (as it appears in the table's `!` row) → field name handed to
+# ShipRecord.from_dict. Anything not in this map is ignored.
+_COL_FIELD_PARSER: dict[str, tuple[str, Any]] = {
+    "Ships":        ("displayName",     lambda c: _clean_cell(c)),
+    "Manufacturer": ("manufacturer",    lambda c: _clean_cell(c) or None),
+    "Crew":         ("crew",            lambda c: _parse_number(c)),
+    "Hull":         ("hullScale",       lambda c: _parse_number(c)),
+    "Armr":         ("armorScale",      lambda c: _parse_number(c)),
+    "Shld":         ("shieldScale",     lambda c: _parse_number(c)),
+    "Crgo":         ("cargo",           lambda c: _parse_number(c)),
+    "Spd":          ("speed",           lambda c: _parse_number(c)),
+    "Acc":          ("accel",           lambda c: _parse_number(c)),
+    "Hrdp":         ("hardpoints",      lambda c: _parse_hardpoints(c)),
+    "ShpR":         ("shipyardRep",     lambda c: (_clean_cell(c) or None)
+                                                  if _clean_cell(c) not in {"", "—", "-"} else None),
+    "Cnq":          ("conquestRank",    lambda c: (_clean_cell(c) or None)
+                                                  if _clean_cell(c) not in {"", "—", "-"} else None),
+    "PlyrL":        ("playerLevel",     lambda c: _parse_number(c)),
+    "ShpL":         ("shipyardLevel",   lambda c: (_clean_cell(c) or None)
+                                                  if _clean_cell(c) not in {"", "—", "-"} else None),
+}
+
+
+def _split_table_rows(table_wt: str) -> list[list[str]]:
+    """Parse one ``{| ... |}`` wikitable into a row-of-cells list.
+
+    Handles both compact rows (``| a || b || c``) and one-cell-per-line rows
+    (``| a\\n| b\\n| c``); strips leading ``+`` caption rows."""
+    m = re.search(r"\{\|[^\n]*\n([\s\S]*?)\n\|\}", table_wt)
+    if not m:
+        return []
+    body = m.group(1)
+    # Drop caption lines ("|+ caption") and class/style attribute lines.
+    body = re.sub(r"^\|\+[^\n]*\n?", "", body, flags=re.MULTILINE)
+    # Some tables open with a leading `|-` before the header row; others put the
+    # header on the line right after `{|`. Strip a leading separator so both
+    # shapes split into the same row sequence.
+    body = re.sub(r"^\|-\s*\n", "", body)
+
+    # Strip File: and Image: link markup before cell-splitting — their internal
+    # `|` (e.g. `[[File:Raptor.png|thumb|center]]`) would otherwise be mistaken
+    # for a column separator and shift every subsequent cell.
+    body = re.sub(r"\[\[(?:File|Image):[^\]]+\]\]", "", body, flags=re.IGNORECASE)
+
+    raw_rows = re.split(r"\n\s*\|-\s*\n", body)
+    rows: list[list[str]] = []
+    for raw in raw_rows:
+        raw = raw.strip()
+        if not raw:
+            continue
+        is_header = raw.startswith("!")
+        text = raw.lstrip("!|").strip() if is_header else raw.lstrip("|").strip()
+        # `[ \t]*` after the pipe — not `\s*` — so a blank cell on its own line
+        # (`| \n|`) stays as an empty cell instead of being swallowed by the
+        # separator. The cell-split anchor is the literal newline-pipe pair.
+        sep = r"[ \t]*!![ \t]*|\n![ \t]*" if is_header else r"[ \t]*\|\|[ \t]*|\n\|[ \t]*"
+        cells = [c.strip() for c in re.split(sep, text)]
+        rows.append(cells)
+    return rows
+
+
+def parse_ship_list(wikitext: str) -> dict[str, dict[str, Any]]:
+    """Return ``{key: lua-shaped dict}`` for ``ShipRecord.from_dict``.
+
+    Walks every ``<tabber>...</tabber>`` block on the Ship List page. Each
+    ``|-|TabName=`` tab contributes one hull class. Same display-name across
+    multiple manufacturers gets disambiguated as ``"Name (Manufacturer)"``."""
     records: dict[str, dict[str, Any]] = {}
-    for m in _ENTRY_RE.finditer(text):
-        key = m.group(1)
-        depth = 1
-        i = m.end()
-        while i < len(text) and depth > 0:
-            c = text[i]
-            if c == "{":
-                depth += 1
-            elif c == "}":
-                depth -= 1
-            i += 1
-        body = text[m.end():i - 1]
-        fields: dict[str, Any] = {}
-        for fm in _FIELD_RE.finditer(body):
-            fields[fm.group(2)] = _coerce(fm.group(3))
+    # First pass: collect all rows with their class+manufacturer so we can
+    # disambiguate keys for same-name multi-manufacturer ships at the end.
+    pending: list[tuple[str, dict[str, Any]]] = []
+
+    for tabber_m in re.finditer(r"<tabber>([\s\S]*?)</tabber>", wikitext):
+        inner = tabber_m.group(1)
+        # `|-|TabName=tab body` repeated; the first tab has no leading "|-|".
+        tab_matches = list(re.finditer(r"(?:^|\n)\|-\|([^=\n]+)=", inner))
+        if not tab_matches:
+            continue
+        # Splice in an implicit start marker at 0 for the first tab — its name
+        # is on the first "|-|" so the inner content before that first marker
+        # is the tabber preamble (we don't need it).
+        for i, tm in enumerate(tab_matches):
+            tab_name = tm.group(1).strip()
+            tab_start = tm.end()
+            tab_end = tab_matches[i + 1].start() if i + 1 < len(tab_matches) else len(inner)
+            tab_body = inner[tab_start:tab_end]
+            ship_class = _CLASS_SINGULAR.get(tab_name)
+            if ship_class is None:
+                continue  # unknown tab — skip rather than guess
+            for tbl_m in re.finditer(r"\{\|[^\n]*\n[\s\S]*?\n\|\}", tab_body):
+                rows = _split_table_rows(tbl_m.group(0))
+                if len(rows) < 2:
+                    continue
+                headers = rows[0]
+                for cells in rows[1:]:
+                    if not any(cells):
+                        continue
+                    fields: dict[str, Any] = {"class": ship_class + "s"}
+                    for col, cell in zip(headers, cells):
+                        col = col.strip()
+                        if col not in _COL_FIELD_PARSER:
+                            continue
+                        field, parser = _COL_FIELD_PARSER[col]
+                        fields[field] = parser(cell)
+                    name = fields.get("displayName")
+                    if not name:
+                        continue
+                    mfr = fields.get("manufacturer")
+                    if mfr:
+                        fields["shipyardFactions"] = [mfr]
+                    pending.append((name, fields))
+
+    # Disambiguate keys: a display name appearing under multiple manufacturers
+    # gets " (Manufacturer)" appended; unique names keep the bare name as key.
+    name_counts: dict[str, int] = {}
+    for name, _ in pending:
+        name_counts[name] = name_counts.get(name, 0) + 1
+    for name, fields in pending:
+        if name_counts[name] > 1 and fields.get("manufacturer"):
+            key = f"{name} ({fields['manufacturer']})"
+        else:
+            key = name
         records[key] = fields
     return records
 
@@ -140,12 +280,12 @@ _API_URL = "https://vanguard-galaxy.fandom.com/api.php"
 
 
 def load(session) -> ShipData:
-    """Fetch and parse Module:ShipData. One network call per scraper run."""
+    """Fetch and parse [[Ship List]]. One network call per scraper run."""
     resp = session.get(
         _API_URL,
         params={
             "action": "parse",
-            "page": "Module:ShipData",
+            "page": "Ship List",
             "prop": "wikitext|revid",
             "format": "json",
             "formatversion": "2",
@@ -154,7 +294,7 @@ def load(session) -> ShipData:
     )
     resp.raise_for_status()
     parse = resp.json()["parse"]
-    raw = parse_lua(parse["wikitext"])
+    raw = parse_ship_list(parse["wikitext"])
     records = {k: ShipRecord.from_dict(k, v) for k, v in raw.items()}
     return ShipData(records=records, revid=int(parse["revid"]))
 

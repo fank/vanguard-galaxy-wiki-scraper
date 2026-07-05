@@ -1,0 +1,152 @@
+[[File:Gear.png|thumb|600px|right|Aspects on equipment]]
+
+Aspects are modifications to ship equipment that can add special benefits to the item the are modifying, or to the entire ship.
+
+== '''Aspects''' ==
+
+Aspects can fill the slot(s) underneath module items, and add special benefits like enhanced defense, critical chance, repair rates, added resistances etc.
+
+Depending on rarity of the item one can find different number of aspects, or none at all. Some Aspects can fit onto all gear, others can be applied to specific modules, and some only on a single one.
+
+Aspects can be removed in the [[Workshop]], which will destroy the item, but an extracted aspect can be applied onto another piece of equipment later.
+
+=== '''Generation chance''' ===
+
+When items are randomly generated, chance for item slots is determined by their rarity.
+{| class="fandom-table"
+|-
+|Normal||None||
+|-
+|<span style="color:green">Enhanced</span>||Aspect 0-1||''25% chance of 1, 75% chance of 0''
+|-
+|<span style="color:Blue ">High Grade</span>||Aspect 1||''25% chance of 1 Rare, 75% chance of 1 Common''
+|-
+|<span style="color:purple">Exotic</span>||Aspect 1-2||''25% chance of 2 items (1 Rare + 1 Common), 75% chance of 1 item (1 Rare)''
+|-
+|<span style="color:orange">Legendary</span>||Aspect 2||''25% chance of 2 Rare, 75% chance of 2 items (1 Rare + 1 Common)''
+|}
+
+== Legend ==
+
+
+;Rarity
+: <span style="color:green">Common</span> &mdash; baseline aspect, drops on Enhanced+ items.
+: <span style="color:purple">Rare</span> &mdash; rarer roll, drops on Exotic+ items.
+;Slot
+: Weapons &mdash; turret hardpoints.
+: Dronebay &mdash; drone-bay modules.
+: Hull / Armor &mdash; the named module type.
+: Scanner &mdash; the scanner module.
+: All Modules &mdash; any non-weapon module slot.
+: All Items &mdash; any equipment slot.
+
+
+== Aspect List ==
+
+<tabber>
+|-|Weapons=
+Aspects that attach to turret hardpoints — damage modifiers, reload, and elemental riders.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Critical Attenuation.png|40x40px]] || <span style="color:green">Critical Attenuation</span> || Increases critical strike damage of this weapon by 25% || Weapons
+|-
+| [[File:Reload Subroutine.png|40x40px]] || <span style="color:green">Reload Subroutine</span> || Increases reload speed of the weapon by 25% || Weapons
+|-
+| [[File:Firestarter.png|40x40px]] || <span style="color:purple">Firestarter</span> || Deals an additional 15% Heat damage over 6 seconds || Weapons
+|-
+| [[File:Frozen Core.png|40x40px]] || <span style="color:purple">Frozen Core</span> || Deals an additional 10% Cold damage. Hits may slow the target's movement || Weapons
+|-
+| [[File:Punch Through.png|40x40px]] || <span style="color:purple">Punch Through</span> || Deals an additional 10% Kinetic damage || Weapons
+|}
+
+
+|-|Dronebay=
+Aspects that go on drone-bay modules. The Mk2 variant is restricted to medium and large bays.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Extended Drone Boy.png|40x40px]] || <span style="color:green">Extended Drone Boy</span> || Increases maximum drones by 1 || Dronebay
+|-
+| [[File:Oversized Drone Bay.png|40x40px]] || <span style="color:purple">Oversized Drone Bay</span> || Increases maximum drones by 2 || Dronebay (M/L only)
+|}
+
+
+|-|Scanner=
+Aspects that attach to the scanner module — sensors, range, and crit-chance enhancements.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Rangefinder.png|40x40px]] || <span style="color:purple">Rangefinder</span> || Increases weapon range by 25% || Scanner
+|-
+| [[File:Weakpoint Scan.png|40x40px]] || <span style="color:purple">Weakpoint Scan</span> || Increases critical chance by 5% || Scanner
+|}
+
+
+|-|Hull=
+Aspects that attach to the hull module.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Crisis Protocol.png|40x40px]] || <span style="color:purple">Crisis Protocol</span> || Adds +30% Power for 10 seconds whenever you take hull damage. (Cooldown: 40 seconds) || Hull
+|}
+
+
+|-|Armor=
+Aspects that attach to armor modules.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Hardened Exterior.png|40x40px]] || <span style="color:purple">Hardened Exterior</span> || Reduces damage taken by 5% || Armor
+|}
+
+
+|-|All Modules=
+Wildcard aspects that fit on any non-weapon module slot — reactor, thrust, and module-wide effects.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Microgenerators.png|40x40px]] || <span style="color:green">Microgenerators</span> || Increases reactor energy by 10% || All Modules
+|-
+| [[File:Microthruster Array.png|40x40px]] || <span style="color:green">Microthruster Array</span> || Increases Engine thrust by 10% || All Modules
+|-
+| [[File:Repair Nanites.png|40x40px]] || <span style="color:purple">Repair Nanites</span> || Armor slowly regenerates over time || All Modules
+|}
+
+
+|-|All Items=
+Wildcard aspects that fit on any equipment slot, weapons included — broad defensive and resistance bonuses.
+
+
+{| class="sortable fandom-table"
+! !! Aspects !! Description !! Slots
+|-
+| [[File:Gamma Ward.png|40x40px]] || <span style="color:green">Gamma Ward</span> || Increases Energy and Radiation damage resistance by 5% || All Items
+|-
+| [[File:Hardened Plating.png|40x40px]] || <span style="color:green">Hardened Plating</span> || Increases Kinetic, Corrosive and Explosion damage resistance by 2% || All Items
+|-
+| [[File:Operational Reserves.png|40x40px]] || <span style="color:green">Operational Reserves</span> || Increases Power by 2% || All Items
+|-
+| [[File:Shielding Subsystem.png|40x40px]] || <span style="color:green">Shielding Subsystem</span> || Increases Shield regeneration rate by 5% || All Items
+|-
+| [[File:Solar Powered.png|40x40px]] || <span style="color:green">Solar Powered</span> || Does not require Reactor energy to function || All Items
+|-
+| [[File:Structural Supports.png|40x40px]] || <span style="color:green">Structural Supports</span> || Increases Hull HP by 5% || All Items
+|}
+
+
+</tabber>
+
+[[Category:Lists]]
