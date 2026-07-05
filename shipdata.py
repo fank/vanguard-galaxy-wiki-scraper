@@ -113,11 +113,14 @@ _COL_FIELD_PARSER: dict[str, tuple[str, Any]] = {
 }
 
 
-def _split_table_rows(table_wt: str) -> list[list[str]]:
+def split_table_rows(table_wt: str) -> list[list[str]]:
     """Parse one ``{| ... |}`` wikitable into a row-of-cells list.
 
     Handles both compact rows (``| a || b || c``) and one-cell-per-line rows
     (``| a\\n| b\\n| c``); strips leading ``+`` caption rows."""
+    # Normalise ``|- style="..."`` to a bare ``|-`` so the row-split
+    # pattern below doesn't miss rows with inline CSS attributes.
+    table_wt = re.sub(r"\n\s*\|-[ \t]+[^|\n]*\n", "\n|-\n", table_wt)
     m = re.search(r"\{\|[^\n]*\n([\s\S]*?)\n\|\}", table_wt)
     if not m:
         return []
@@ -180,7 +183,7 @@ def parse_ship_list(wikitext: str) -> dict[str, dict[str, Any]]:
             if ship_class is None:
                 continue  # unknown tab — skip rather than guess
             for tbl_m in re.finditer(r"\{\|[^\n]*\n[\s\S]*?\n\|\}", tab_body):
-                rows = _split_table_rows(tbl_m.group(0))
+                rows = split_table_rows(tbl_m.group(0))
                 if len(rows) < 2:
                     continue
                 headers = rows[0]
@@ -202,16 +205,17 @@ def parse_ship_list(wikitext: str) -> dict[str, dict[str, Any]]:
                         fields["shipyardFactions"] = [mfr]
                     pending.append((name, fields))
 
-    # Disambiguate keys: a display name appearing under multiple manufacturers
-    # gets " (Manufacturer)" appended; unique names keep the bare name as key.
-    name_counts: dict[str, int] = {}
-    for name, _ in pending:
-        name_counts[name] = name_counts.get(name, 0) + 1
+    # Disambiguate keys: when multiple manufacturers sell the same ship, keep
+    # the first entry as the bare-name canonical and suffix " (Manufacturer)"
+    # only on subsequent entries. This guarantees ``_variant_sentence`` can
+    # always find a bare-name key to link back to.
+    seen_names: set[str] = set()
     for name, fields in pending:
-        if name_counts[name] > 1 and fields.get("manufacturer"):
+        if name in seen_names and fields.get("manufacturer"):
             key = f"{name} ({fields['manufacturer']})"
         else:
             key = name
+            seen_names.add(name)
         records[key] = fields
     return records
 

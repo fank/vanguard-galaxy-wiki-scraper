@@ -161,9 +161,9 @@ def test_main_emits_spec_card_per_ship(
     rc = scrape.main_with_args(["--out", str(tmp_path), "--full", "--sleep", "0"])
     assert rc == 0
     payload = json.loads((tmp_path / "vg_wiki.json").read_text())
-    # Fixture has Cudal sold by both Frontier and Marade Wharf — disambiguated
-    # keys give two Spec cards, each linking to the other as a variant.
-    assert "Cudal (Frontier) – Spec" in payload
+    # Fixture has Cudal sold by both Frontier and Marade Wharf — the first
+    # (Frontier) keeps the bare key as canonical; the second gets disambiguated.
+    assert "Cudal – Spec" in payload
     assert "Cudal (Marade Wharf) – Spec" in payload
 
 

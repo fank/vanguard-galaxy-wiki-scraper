@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from shipdata import _split_table_rows
+from shipdata import split_table_rows
 
 
 _API_URL = "https://vanguard-galaxy.fandom.com/api.php"
@@ -146,7 +146,7 @@ def parse_aspects(wikitext: str) -> dict[str, dict[str, Any]]:
             tab_end = tab_matches[i + 1].start() if i + 1 < len(tab_matches) else len(inner)
             for tbl_m in re.finditer(r"\{\|[^\n]*\n[\s\S]*?\n\|\}",
                                      inner[tab_start:tab_end]):
-                rows = _split_table_rows(tbl_m.group(0))
+                rows = split_table_rows(tbl_m.group(0))
                 if len(rows) < 2:
                     continue
                 # Headers come back as e.g. ['', 'Aspects', 'Description', 'Slots']

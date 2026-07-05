@@ -31,11 +31,11 @@ def test_parse_ship_list_disambiguates_same_name_under_multiple_manufacturers(
     ship_list_wikitext,
 ):
     raw = parse_ship_list(ship_list_wikitext)
-    # Cudal sells at both Frontier and Marade Wharf — the parser keys them
-    # with " (Manufacturer)" so the variant sentence has something to link.
-    assert "Cudal (Frontier)" in raw
+    # Cudal sells at both Frontier and Marade Wharf — the first entry
+    # (Frontier) keeps the bare key as canonical; the second gets " (Mfr)".
+    assert "Cudal" in raw
     assert "Cudal (Marade Wharf)" in raw
-    assert raw["Cudal (Frontier)"]["manufacturer"] == "Frontier"
+    assert raw["Cudal"]["manufacturer"] == "Frontier"
     assert raw["Cudal (Marade Wharf)"]["manufacturer"] == "Marade Wharf"
 
 
